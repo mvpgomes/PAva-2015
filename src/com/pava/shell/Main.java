@@ -24,19 +24,17 @@ public class Main {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         Object lastResult = null;
         while(true){
-            System.out.println("");
+            System.out.print("Command:> ");
             line = br.readLine();
             command = line.split(" ", 0);
-            System.out.println(command[0]);
 
-            String[] commandArgs = Arrays.copyOfRange(command, 1, command.length);
             if (commands.containsKey(command[0])) {
+                String[] commandArgs = Arrays.copyOfRange(command, 1, command.length);
                 lastResult = commands.get(command[0]).execute(commandArgs, variables, lastResult);
-
             } else {
+                String[] commandArgs = command;
                 lastResult = new GenericCommand().execute(commandArgs, variables, lastResult);
             }
-
         }
     }
 }

@@ -8,6 +8,7 @@ public class IndexCommand implements Command {
         if (lastResult instanceof Object[]) {
             Object[] arr = (Object[]) lastResult;
             int index = Integer.parseInt(args[0]);
+            System.out.println(arr[index].toString());
             return arr[index];
         }
         return null;
