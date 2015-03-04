@@ -1,0 +1,45 @@
+<project name="lab01" basedir=".">
+	<description>
+		1. Create a class named HelloWorld that prints "Hello World!" when its main method runs.
+		
+		2. Create a project named 'lab01' with the following contents:
+		- build.xml: Ant build file that supports the following targets with the typical behavior:
+			init: creates the classes dir
+			clean: cleans the entire project's generated files
+			compile (default target): compiles the source code into the classes directory
+			run: runs the application HelloWord
+		- src: directory where the java source files reside
+		- classes: directory where the java bytecode files reside
+		
+		3. Run the program from the console:
+		- using the target run from the Ant build file
+		- directly using the java program
+		
+		4. Reusing the previous project, do the following changes:
+		- Create a new interface Message with the method void say();
+		- Create a class named GoodbyeWorld that implements Message.  The method say() should print "Goodbye World!"
+		- Change HelloWorld so that it also implements Message. The method say() should now print "Hello World!"
+
+		5. Develop a program that asks the user for a String, which should be the name of a class that implements the Message interface. Then, using reflection, the program should instantiate the given class.  Finally, without using reflection, it should invoke the say() method on the instance of Message.
+
+		6. Compile and run the previous program.
+	</description>
+	<property name="src" location="src"/>
+	<property name="classes" location="classes"/>
+
+	<target name="init">
+		<mkdir dir="${classes}"/>
+	</target>
+
+	<target name="clean">
+		<delete dir="${classes}"/>
+	</target>
+
+	<target name="compile" depends="init">
+		<javac srcdir="${src}" destdir="${classes}" includeantruntime="false"/>
+	</target>
+
+	<target name="run" depends="compile">
+		<java classpath="${classes}" classname="Main"/>
+	</target>
+</project>
