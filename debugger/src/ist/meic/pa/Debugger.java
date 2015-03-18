@@ -9,18 +9,18 @@ public class Debugger {
                                Class[] methodSig, Object[] methodArgs, Class resultSig) {
         final CallInstance i = new CallInstance(instanceClass, instance, methodName, methodSig, methodArgs, resultSig);
         callStack.push(i);
-        
+        System.out.println("Added method to call stack.");
         print(i);
     }
 
     // Called when an exception occurs.
     public static void inspect() {
         // TODO to implement
+        System.out.println("Inspecting method");
     }
 
     private static void print(CallInstance i) {
-        System.out.println("Debugging...");
-        System.out.println("Classname: " + i.getInstanceClass().toString());
+        System.out.println("Classname: " + i.getInstanceClass().getName());
 
         if (i.getInstance() != null) {
             System.out.println("Instance.toString(): " + i.getInstance().toString());
@@ -35,7 +35,7 @@ public class Debugger {
         System.out.print(i.getMethodName());
         System.out.print("(");
         for (Class m : i.getMethodSig()) {
-            System.out.print(m.toString());
+            System.out.print(m.getSimpleName() + ", ");
         }
         System.out.println(")");
     }
