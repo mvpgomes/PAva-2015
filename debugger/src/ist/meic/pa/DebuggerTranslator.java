@@ -41,12 +41,13 @@ public class DebuggerTranslator implements Translator {
                 final String instanceCmd = Modifier.isStatic(m.getModifiers()) ? "null" : "$0";
                 final String returnCmd = m.getReturnType().getSimpleName().equals("void") ? "null" : "$type";
                 m.addCatch( "{ " +
-                                "ist.meic.pa.Debugger.inspect($class, " + instanceCmd + ", \"" + m.getLongName() + "\"," +
+                                "ist.meic.pa.Debugger.addCall($class, " + instanceCmd + ", \"" + m.getLongName() + "\"," +
                                                             "$sig, $args, " + returnCmd + ");" +
                                 "throw $e;" +
                             "}", etype);
             }
         } catch (Throwable t) {
+            // should not happen
             throw new RuntimeException(t);
         }
     }
