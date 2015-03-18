@@ -1,8 +1,8 @@
 package ist.meic.pa.command;
 
-public class AbortCommand implements Command {
+public class ReturnCommand implements Command {
     @Override
     public void execute() {
-
+        
     }
 }
