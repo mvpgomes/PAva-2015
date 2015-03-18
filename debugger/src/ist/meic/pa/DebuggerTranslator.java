@@ -23,8 +23,29 @@ public class DebuggerTranslator implements Translator {
     }
 
     private static void instrumentMethods(CtClass c) {
+        if (c == null || c.getName().equals("java.lang.Object")) {
+            return;
+        }
+
+        // instrument parent
         try {
-            c.getDeclaredMethod("main").insertBefore("{ System.out.println(\"Before\"); }");
+            instrumentMethods(c.getSuperclass());
+        } catch (NotFoundException e) {
+            // should not happen
+            throw new RuntimeException(e);
+        }
+
+        try {
+            final CtClass etype = ClassPool.getDefault().get("java.lang.Throwable");
+            for (CtMethod m : c.getDeclaredMethods()) {
+                final String instanceCmd = Modifier.isStatic(m.getModifiers()) ? "null" : "$0";
+                final String returnCmd = m.getReturnType().getSimpleName().equals("void") ? "null" : "$type";
+                m.addCatch( "{ " +
+                                "ist.meic.pa.Debugger.inspect($class, " + instanceCmd + ", \"" + m.getLongName() + "\"," +
+                                                            "$sig, $args, " + returnCmd + ");" +
+                                "throw $e;" +
+                            "}", etype);
+            }
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }

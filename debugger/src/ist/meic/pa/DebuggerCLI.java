@@ -21,7 +21,7 @@ public class DebuggerCLI {
         System.out.println("Debugging app: " + dAppName);
         System.out.println("Debugging app package name: " + dPackageName);
 
-        // instrument future <dPackageName> classes
+        // instrument <dPackageName> classes
         DebuggerTranslator t = new DebuggerTranslator(dPackageName);
         ClassPool cp = ClassPool.getDefault();
         Loader cl = new Loader();
