@@ -11,7 +11,7 @@ public class DebuggerCLI {
     public static void main(String[] args) throws Throwable {
         if (args.length < 1) {
             System.err.println("Not enough arguments.");
-            System.err.println("Expected <app> <to be debugged app name>");
+            System.err.println("Expected <to be debugged app name>");
             System.exit(-1);
         }
 

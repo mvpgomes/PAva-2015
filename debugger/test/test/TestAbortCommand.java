@@ -1,4 +1,4 @@
-package ist.meic.pa.command;
+package test;
 
 public class TestAbortCommand {
 }
