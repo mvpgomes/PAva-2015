@@ -13,11 +13,14 @@ public class Debugger {
         print(i);
     }
 
-    // Called when an exception occurs.
+    /**
+     * Called when an exception in the debugged code occurs.
+     * @return may return values, depending on the debugger command used.
+     */
     public static Object inspect() {
         // TODO to implement
         System.out.println("Inspecting method");
-        return Math.PI;
+        return null;
     }
 
     private static void print(MethodCallEntry i) {
