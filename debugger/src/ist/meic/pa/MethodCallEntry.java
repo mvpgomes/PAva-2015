@@ -1,6 +1,6 @@
 package ist.meic.pa;
 
-public class CallInstance {
+public class MethodCallEntry {
     private final Class instanceClass;
     private final Object instance;
     private final String methodName;
@@ -8,8 +8,8 @@ public class CallInstance {
     private final Object[] methodArgs;
     private final Class resultSig;
 
-    public CallInstance(Class instanceClass, Object instance, String methodName, Class[] methodSig, Object[] methodArgs,
-                        Class resultSig) {
+    public MethodCallEntry(Class instanceClass, Object instance, String methodName, Class[] methodSig, Object[] methodArgs,
+                           Class resultSig) {
         this.instanceClass = instanceClass;
         this.instance = instance;
         this.methodName = methodName;
