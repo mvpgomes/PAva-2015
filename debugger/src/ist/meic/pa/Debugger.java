@@ -3,6 +3,7 @@ package ist.meic.pa;
 import java.util.Stack;
 
 public class Debugger {
+
     private static Stack<MethodCallEntry> callStack = new Stack<>();
 
     public static void addCall(Class instanceClass, Object instance, String methodName,
