@@ -5,7 +5,7 @@ import java.util.Stack;
 
 public class InfoCommand implements Command {
     @Override
-    public void execute(Stack<MethodCallEntry> stack, Object calledObject, String[] args) {
+    public Object execute(Stack<MethodCallEntry> stack, Object calledObject, String[] args) {
         System.out.print("Called Object:");
         // Need to print the called object
         System.out.println(calledObject.toString());
@@ -15,6 +15,7 @@ public class InfoCommand implements Command {
         for(MethodCallEntry entry : stack) {
             entry.toString();
         }
+        return calledObject;
     }
 }
 

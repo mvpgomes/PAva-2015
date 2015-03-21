@@ -8,26 +8,27 @@ import ist.meic.pa.parser.*;
 
 public class DebuggerBootstrap {
 
-    public static void bootstrap(Debugger debugger){
-        initParameterParsers(debugger);
-        initCommands(debugger);
+    public static void bootstrap(){
+        initParameterParsers();
+        initCommands();
     }
 
-   private static void initCommands(Debugger debugger) {
-       debugger.addCommand("abort", new AbortCommand());
-       debugger.addCommand("info", new InfoCommand());
-       debugger.addCommand("return", new ReturnCommand());
-       debugger.addCommand("throw", new ThrowCommand());
+   private static void initCommands() {
+       Debugger.addCommand("abort", new AbortCommand());
+       Debugger.addCommand("info", new InfoCommand());
+       Debugger.addCommand("return", new ReturnCommand());
+       Debugger.addCommand("throw", new ThrowCommand());
    }
 
-    private static void initParameterParsers(Debugger debugger) {
-        debugger.addParameterParser("byte", new ByteParser());
-        debugger.addParameterParser("short", new ShortParser());
-        debugger.addParameterParser("int", new IntegerParser());
-        debugger.addParameterParser("long", new LongParser());
-        debugger.addParameterParser("float", new FloatParser());
-        debugger.addParameterParser("double", new DoubleParser());
-        debugger.addParameterParser("boolean", new ByteParser());
-        debugger.addParameterParser("char", new CharParser());
+    private static void initParameterParsers() {
+        Debugger.addParameterParser("byte", new ByteParser());
+        Debugger.addParameterParser("short", new ShortParser());
+        Debugger.addParameterParser("int", new IntegerParser());
+        Debugger.addParameterParser("long", new LongParser());
+        Debugger.addParameterParser("float", new FloatParser());
+        Debugger.addParameterParser("double", new DoubleParser());
+        Debugger.addParameterParser("boolean", new ByteParser());
+        Debugger.addParameterParser("char", new CharParser());
+        Debugger.addParameterParser("String", new StringParser());
     }
 }

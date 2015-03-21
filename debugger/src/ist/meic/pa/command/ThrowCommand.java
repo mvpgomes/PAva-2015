@@ -5,7 +5,7 @@ import java.util.Stack;
 
 public class ThrowCommand implements Command {
     @Override
-    public void execute(Stack<MethodCallEntry> stack, Object calledObject, String[] args) {
-
+    public Object execute(Stack<MethodCallEntry> stack, Object calledObject, String[] args) {
+        return calledObject;
     }
 }

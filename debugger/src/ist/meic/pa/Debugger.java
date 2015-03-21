@@ -3,6 +3,7 @@ package ist.meic.pa;
 import ist.meic.pa.command.Command;
 import ist.meic.pa.parser.Parser;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
@@ -10,22 +11,20 @@ public class Debugger {
 
     private static Stack<MethodCallEntry> callStack = new Stack<>();
 
-    private Map<String, Command> commands;
+    private static Map<String, Command> commands = new HashMap<>();
 
-    private Map<String, Parser> parameterParser;
+    private static Map<String, Parser> parameterParser = new HashMap<>();
 
-
-    public Debugger(Map<String, Command> commands, Map<String, Parser> parameterParser) {
-        this.commands = commands;
-        this.parameterParser = parameterParser;
+    public static void addCommand(String commandName, Command command) {
+        commands.put(commandName, command);
     }
 
-    public void addCommand(String commandName, Command command) {
-        this.commands.put(commandName, command);
+    public static void addParameterParser(String parameterType, Parser parser){
+        parameterParser.put(parameterType,parser);
     }
 
-    public void addParameterParser(String parameterType, Parser parser){
-        this.parameterParser.put(parameterType,parser);
+    public static Parser getParameterParser(String parameterType) {
+        return parameterParser.get(parameterType);
     }
 
     public static void addCall(Class instanceClass, Object instance, String methodName,
@@ -40,9 +39,8 @@ public class Debugger {
      * Called when an exception in the debugged code occurs.
      * @return may return values, depending on the debugger command used.
      */
-    public Object inspect() {
+    public static Object inspect() {
         // TODO to implement
-        DebuggerBootstrap.bootstrap(this);
         System.out.println("Inspecting method");
         return null;
     }
