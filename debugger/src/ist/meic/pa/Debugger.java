@@ -9,11 +9,21 @@ import java.util.Stack;
 
 public class Debugger {
 
+    private static Exception throwedExecption;
+
     private static Stack<MethodCallEntry> callStack = new Stack<>();
 
     private static Map<String, Command> commands = new HashMap<>();
 
     private static Map<String, Parser> parameterParser = new HashMap<>();
+
+    public static void setThrowedException(Exception e) {
+        throwedExecption = e;
+    }
+
+    public static Exception getThrowedExecption(){
+        return throwedExecption;
+    }
 
     public static void addCommand(String commandName, Command command) {
         commands.put(commandName, command);
