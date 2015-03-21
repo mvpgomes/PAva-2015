@@ -13,7 +13,7 @@ public class InfoCommand implements Command {
         // Need to print the stack
         System.out.println("Call stack:");
         for(int i=stack.size() - 1; i >= 0; i--) {
-            System.out.println(stack.elementAt(i));
+            System.out.println(stack.elementAt(i).toString());
         }
         return calledObject;
     }
