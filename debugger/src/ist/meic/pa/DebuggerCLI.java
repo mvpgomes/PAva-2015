@@ -1,9 +1,12 @@
 package ist.meic.pa;
 
+import ist.meic.pa.parser.Parser;
 import javassist.ClassPool;
 import javassist.Loader;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DebuggerCLI {
 
