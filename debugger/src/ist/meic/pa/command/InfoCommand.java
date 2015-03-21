@@ -12,8 +12,8 @@ public class InfoCommand implements Command {
         System.out.println();
         // Need to print the stack
         System.out.println("Call stack:");
-        for(MethodCallEntry entry : stack) {
-            entry.toString();
+        for(int i=stack.size() - 1; i >= 0; i--) {
+            System.out.println(stack.elementAt(i));
         }
         return calledObject;
     }
