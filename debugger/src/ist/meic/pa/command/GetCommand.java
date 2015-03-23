@@ -10,6 +10,7 @@ public class GetCommand implements Command {
     public Object execute(Stack<MethodCallEntry> stack, Object calledObject, String[] args) throws Exception {
         Field field = calledObject.getClass().getDeclaredField(args[0]);
         field.setAccessible(true);
-        return field.get(calledObject);
+        System.out.println(field.get(calledObject));
+        return calledObject;
     }
 }

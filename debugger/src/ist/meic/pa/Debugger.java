@@ -21,7 +21,7 @@ public class Debugger {
         throwedExecption = e;
     }
 
-    public static Exception getThrowedExecption(){
+    public static Exception getThrowedException(){
         return throwedExecption;
     }
 
