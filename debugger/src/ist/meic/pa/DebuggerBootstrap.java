@@ -1,9 +1,6 @@
 package ist.meic.pa;
 
-import ist.meic.pa.command.AbortCommand;
-import ist.meic.pa.command.InfoCommand;
-import ist.meic.pa.command.ReturnCommand;
-import ist.meic.pa.command.ThrowCommand;
+import ist.meic.pa.command.*;
 import ist.meic.pa.parser.*;
 
 public class DebuggerBootstrap {
@@ -14,10 +11,12 @@ public class DebuggerBootstrap {
     }
 
    private static void initCommands() {
-       Debugger.addCommand("abort", new AbortCommand());
-       Debugger.addCommand("info", new InfoCommand());
-       Debugger.addCommand("return", new ReturnCommand());
-       Debugger.addCommand("throw", new ThrowCommand());
+       Debugger.addCommand("Abort", new AbortCommand());
+       Debugger.addCommand("Info", new InfoCommand());
+       Debugger.addCommand("Return", new ReturnCommand());
+       Debugger.addCommand("Throw", new ThrowCommand());
+       Debugger.addCommand("Get", new GetCommand());
+       Debugger.addCommand("Set", new SetCommand());
    }
 
     private static void initParameterParsers() {
