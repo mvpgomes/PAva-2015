@@ -63,7 +63,6 @@ public class Debugger {
             }
 
             Command cmd = commands.get(cmdArgs[0]);
-            System.out.println(cmd);
             response = cmd.execute(callStack, callStack.peek().getInstance(), Arrays.copyOfRange(cmdArgs, 1, cmdArgs.length), t);
         } while (response == null);
 

@@ -12,16 +12,17 @@ public class InfoCommand extends Command {
         // Print the called object
         System.out.println(calledObject.toString());
         // Print information about the object
+        System.out.print("Fields:");
         Field[] fields = calledObject.getClass().getDeclaredFields();
         for (Field f : fields) {
-            System.out.println(f.toString());
+            System.out.println(f.getName());
         }
         // Print the contents of the stack
         System.out.println("Call stack:");
         for (int i = stack.size() - 1; i >= 0; i--) {
             System.out.println(stack.elementAt(i).toString());
         }
-        return calledObject;
+        return null;
     }
 }
 

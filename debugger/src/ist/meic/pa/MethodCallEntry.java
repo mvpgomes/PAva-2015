@@ -41,4 +41,17 @@ public class MethodCallEntry {
     public Class getResultSig() {
         return resultSig;
     }
+
+    public String printArgs(Object[] methodArgs){
+        String args = "(";
+        for(int i=0; i < methodArgs.length - 1; i++){
+            args = methodArgs[i].toString() + ",";
+        }
+        return args + methodArgs[methodArgs.length - 1] + ")";
+    }
+
+    @Override
+    public String toString(){
+        return this.instanceClass.getName() + "." + this.methodName + this.printArgs(this.methodArgs);
+    }
 }
