@@ -9,7 +9,7 @@ public class ReturnCommand extends Command {
     public Object execute(Stack<MethodCallEntry> stack, Object calledObject, String[] args, Throwable t) throws Throwable {
         MethodCallEntry calledMethod = stack.pop();
         Class returnType = calledMethod.getResultSig();
-        //TODO: parse input, if its is possible to args contain more then one value
+        System.out.println(getParameterParser().get(returnType.getSimpleName()).parse(args[0]));
         return getParameterParser().get(returnType.getSimpleName()).parse(args[0]);
     }
 }

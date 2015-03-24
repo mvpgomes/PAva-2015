@@ -17,6 +17,7 @@ public class Debugger {
         put("Throw", new ThrowCommand());
         put("Get", new GetCommand());
         put("Set", new SetCommand());
+        put("Retry", new RetryCommand());
     }};
 
     private static Debugger instance;
