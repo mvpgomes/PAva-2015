@@ -1,44 +1,43 @@
 package ist.meic.pa;
 
-import ist.meic.pa.command.Command;
-import ist.meic.pa.parser.Parser;
+import ist.meic.pa.command.*;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
 public class Debugger {
+    private static final Map<String, Command> commands = new HashMap<String, Command>() {{
+        put("Abort", new AbortCommand());
+        put("Info", new InfoCommand());
+        put("Return", new ReturnCommand());
+        put("Throw", new ThrowCommand());
+        put("Get", new GetCommand());
+        put("Set", new SetCommand());
+    }};
 
-    private static Throwable throwedExecption;
+    private static Debugger instance;
 
-    private static Stack<MethodCallEntry> callStack = new Stack<>();
+    private BufferedReader in;
+    private Stack<MethodCallEntry> callStack;
 
-    private static Map<String, Command> commands = new HashMap<>();
-
-    private static Map<String, Parser> parameterParser = new HashMap<>();
-
-    public static void setThrowedException(Throwable e) {
-        throwedExecption = e;
+    private Debugger() {
+        this.in = new BufferedReader(new InputStreamReader(System.in));
+        this.callStack = new Stack<>();
     }
 
-    public static Throwable getThrowedException(){
-        return throwedExecption;
+    public static Debugger getInstance() {
+        if (instance == null) {
+            instance = new Debugger();
+        }
+        return instance;
     }
 
-    public static void addCommand(String commandName, Command command) {
-        commands.put(commandName, command);
-    }
-
-    public static void addParameterParser(String parameterType, Parser parser){
-        parameterParser.put(parameterType,parser);
-    }
-
-    public static Parser getParameterParser(String parameterType) {
-        return parameterParser.get(parameterType);
-    }
-
-    public static void addCall(Class instanceClass, Object instance, String methodName,
-                               Class[] methodSig, Object[] methodArgs, Class resultSig) {
+    public void addCall(Class instanceClass, Object instance, String methodName,
+                        Class[] methodSig, Object[] methodArgs, Class resultSig) {
         final MethodCallEntry i = new MethodCallEntry(instanceClass, instance, methodName, methodSig, methodArgs, resultSig);
         callStack.push(i);
         System.out.println("Added method to call stack.");
@@ -47,15 +46,31 @@ public class Debugger {
 
     /**
      * Called when an exception in the debugged code occurs.
+     *
      * @return may return values, depending on the debugger command used.
      */
-    public static Object inspect() {
-        // TODO to implement
-        System.out.println("Inspecting method");
-        return null;
+    public Object inspect(Throwable t) throws Throwable {
+        Object response;
+        do {
+            System.out.print(":> ");
+            String[] cmdArgs = null;
+
+            try {
+                cmdArgs = in.readLine().split(" ");
+            } catch (Throwable e) {
+                System.out.println("Invalid input");
+                System.exit(1);
+            }
+
+            Command cmd = commands.get(cmdArgs[0]);
+            System.out.println(cmd);
+            response = cmd.execute(callStack, callStack.peek().getInstance(), Arrays.copyOfRange(cmdArgs, 1, cmdArgs.length), t);
+        } while (response == null);
+
+        return response;
     }
 
-    private static void print(MethodCallEntry i) {
+    private void print(MethodCallEntry i) {
         System.out.println("Classname: " + i.getInstanceClass().getName());
 
         if (i.getInstance() != null) {

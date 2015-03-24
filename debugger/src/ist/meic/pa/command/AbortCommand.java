@@ -4,10 +4,10 @@ import ist.meic.pa.MethodCallEntry;
 
 import java.util.Stack;
 
-public class AbortCommand implements Command {
+public class AbortCommand extends Command {
     @Override
-    public Object execute(Stack<MethodCallEntry> stack, Object calledObject, String[] args) throws Throwable {
+    public Object execute(Stack<MethodCallEntry> stack, Object calledObject, String[] args, Throwable t) throws Throwable {
         System.exit(0);
-        return calledObject;
+        return null;
     }
 }
