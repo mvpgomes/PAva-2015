@@ -59,10 +59,13 @@ public class DebuggerTranslator implements Translator {
             // Note that CtMethod.addCatch must throw exception or return value.
             switch (returnType) {
                 case "void":
-                    m.addCatch("{ ist.meic.pa,Debugger.setThrowedException($e); ist.meic.pa.Debugger.inspect(); return; }", etype);
+                    m.addCatch("{ ist.meic.pa.Debugger.setThrowedException($e); ist.meic.pa.Debugger.inspect(); return; }", etype);
                     break;
                 case "int":
                     m.addCatch("{ return ((Integer)ist.meic.pa.Debugger.inspect()).intValue(); }", etype);
+                    break;
+                case "double":
+                    m.addCatch("{ return ((Double)ist.meic.pa.Debugger.inspect()).doubleValue(); }", etype);
                     break;
                 default:
                     throw new RuntimeException("There is no support for that type.");

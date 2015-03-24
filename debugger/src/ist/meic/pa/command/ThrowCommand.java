@@ -6,7 +6,7 @@ import java.util.Stack;
 
 public class ThrowCommand implements Command {
     @Override
-    public Object execute(Stack<MethodCallEntry> stack, Object calledObject, String[] args) throws Exception {
+    public Object execute(Stack<MethodCallEntry> stack, Object calledObject, String[] args) throws Throwable {
         throw Debugger.getThrowedException();
     }
 }

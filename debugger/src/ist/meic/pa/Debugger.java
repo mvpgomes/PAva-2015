@@ -9,7 +9,7 @@ import java.util.Stack;
 
 public class Debugger {
 
-    private static Exception throwedExecption;
+    private static Throwable throwedExecption;
 
     private static Stack<MethodCallEntry> callStack = new Stack<>();
 
@@ -17,11 +17,11 @@ public class Debugger {
 
     private static Map<String, Parser> parameterParser = new HashMap<>();
 
-    public static void setThrowedException(Exception e) {
+    public static void setThrowedException(Throwable e) {
         throwedExecption = e;
     }
 
-    public static Exception getThrowedException(){
+    public static Throwable getThrowedException(){
         return throwedExecption;
     }
 

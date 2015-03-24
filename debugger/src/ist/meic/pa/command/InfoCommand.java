@@ -7,7 +7,7 @@ import java.util.Stack;
 
 public class InfoCommand implements Command {
     @Override
-    public Object execute(Stack<MethodCallEntry> stack, Object calledObject, String[] args) {
+    public Object execute(Stack<MethodCallEntry> stack, Object calledObject, String[] args) throws Throwable {
         System.out.print("Called Object:");
         // Print the called object
         System.out.println(calledObject.toString());
