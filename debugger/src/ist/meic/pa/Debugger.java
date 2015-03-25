@@ -4,6 +4,7 @@ import ist.meic.pa.command.*;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +44,27 @@ public class Debugger {
         callStack.push(i);
         System.out.println("Added method to call stack.");
         print(i);
+    }
+
+    public Object proxy(Object instance, Class c, String methodName, Class[] argTypes, Class resultSig) throws Throwable {
+        addCall(c, instance, methodName, argTypes, null, resultSig);
+        System.out.println("Banana");
+        try {
+            Method m = c.getDeclaredMethod(methodName, argTypes);
+            return m.invoke(instance);
+        } catch (Throwable t) {
+            return inspect(t);
+        }
+    }
+
+    public Object proxy(Object instance, Class c, String methodName, Class[] argTypes, Class resultSig, Object[] argValues) throws Throwable {
+        addCall(c, instance, methodName, argTypes, argValues, resultSig);
+        try {
+            Method m = c.getDeclaredMethod(methodName, argTypes);
+            return m.invoke(instance, argValues);
+        } catch (Throwable t) {
+            return inspect(t);
+        }
     }
 
     /**

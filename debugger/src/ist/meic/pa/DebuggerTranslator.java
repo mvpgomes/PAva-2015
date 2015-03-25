@@ -1,6 +1,8 @@
 package ist.meic.pa;
 
 import javassist.*;
+import javassist.expr.ExprEditor;
+import javassist.expr.MethodCall;
 
 public class DebuggerTranslator implements Translator {
     private final String packageName;
@@ -9,7 +11,7 @@ public class DebuggerTranslator implements Translator {
         this.packageName = packageName;
     }
 
-    private static void instrumentMethods(CtClass c) {
+    private static void instrumentMethods(final CtClass c) {
         if (c == null || c.getName().equals("java.lang.Object")) {
             return;
         }
@@ -25,8 +27,21 @@ public class DebuggerTranslator implements Translator {
         try {
             for (CtMethod m : c.getDeclaredMethods()) {
                 if (!m.isEmpty()) {
-                    injectAddCallStack(m);
-                    injectInspect(m);
+                    m.instrument(
+                            new ExprEditor() {
+                                public void edit(MethodCall mc) throws CannotCompileException {
+                                    try {
+                                        if (mc.getMethod().getParameterTypes().length == 0) {
+                                            mc.replace(String.format("{ $_ = ($r)ist.meic.pa.Debugger.getInstance().proxy($0, $class, \"%s\", $sig, $type); }", mc.getMethodName()));
+                                        } else {
+                                            mc.replace(String.format("{ $_ = ($r)ist.meic.pa.Debugger.getInstance().proxy($0, $class, \"%s\", $sig, $type, $$); }", mc.getMethodName()));
+                                        }
+                                    } catch (Throwable t) {
+                                        throw new RuntimeException(t);
+                                    }
+                                }
+                            }
+                    );
                 }
             }
         } catch (Throwable t) {
@@ -52,6 +67,8 @@ public class DebuggerTranslator implements Translator {
         try {
             final String returnType = m.getReturnType().getSimpleName();
             final CtClass etype = ClassPool.getDefault().get("java.lang.Throwable");
+
+
 
             // Note that CtMethod.addCatch must throw exception or return value.
             switch (returnType) {
