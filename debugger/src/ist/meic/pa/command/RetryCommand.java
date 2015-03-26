@@ -1,5 +1,6 @@
 package ist.meic.pa.command;
 
+import ist.meic.pa.Debugger;
 import ist.meic.pa.MethodCallEntry;
 import ist.meic.pa.Tuple;
 
@@ -16,8 +17,9 @@ public class RetryCommand extends Command {
     public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) throws Throwable {
         try {
             final MethodCallEntry e = stack.peek();
-            final Method m = e.getInstanceClass().getDeclaredMethod(e.getMethodName(), e.getMethodArgsSig());
-            return new Tuple<>(Boolean.TRUE, m.invoke(e.getInstance(), e.getMethodArgs()));
+            Debugger.getInstance().removeLastCall();
+            return new Tuple<>(Boolean.TRUE, Debugger.getInstance().callProxyMethod(e.getInstanceClass(),
+                    e.getInstance(), e.getMethodName(), e.getMethodArgsSig(), e.getMethodArgs(), e.getResultSig()));
         } catch (NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException(e);
         } catch (InvocationTargetException e) {
