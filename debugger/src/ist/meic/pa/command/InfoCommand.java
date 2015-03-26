@@ -27,7 +27,7 @@ public class InfoCommand extends Command {
         // Print the current call stack
         System.out.println("Call stack:");
         for (int i = stack.size() - 1; i >= 0; i--) {
-            System.out.println(stack.elementAt(i).toString());
+            System.out.println(stack.elementAt(i).print());
         }
         return null;
     }

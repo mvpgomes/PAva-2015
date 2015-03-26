@@ -4,6 +4,7 @@ import ist.meic.pa.command.*;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -49,7 +50,7 @@ public class Debugger {
     }
 
     @SuppressWarnings("unchecked")
-    public Object proxy(Class instanceClass, Object instance, String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
+    public Object proxyMethod(Class instanceClass, Object instance, String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
         final MethodCallEntry e = new MethodCallEntry(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig);
         addCall(e);
         try {
@@ -63,11 +64,19 @@ public class Debugger {
         }
     }
 
-    /**
-     * Used by constructor calls. They neither have an instance object, nor a return type.
-     */
-    public void proxy(Class instanceClass, String methodName, Class[] methodArgsSig, Object[] methodArgs) throws Throwable {
-        proxy(instanceClass, null, methodName, methodArgsSig, methodArgs, null);
+    @SuppressWarnings("unchecked")
+    public Object proxyConstructor(String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
+        final MethodCallEntry e = new MethodCallEntry(null, null, methodName, methodArgsSig, methodArgs, resultSig);
+        addCall(e);
+        try {
+            Constructor c = resultSig.getDeclaredConstructor(methodArgsSig);
+            return c.newInstance(methodArgs);
+        } catch (Throwable t) {
+            System.out.println(t.getCause().toString());
+            return repl(t);
+        } finally {
+            removeLastCall();
+        }
     }
 
     /**
@@ -91,7 +100,7 @@ public class Debugger {
 
             Command cmd = commands.get(cmdArgs[0]);
             if (cmd == null) {
-                System.out.println("Unknown command.");
+                System.out.println("Unknown command. Try again.");
             } else {
                 // TODO instead of passing callStack, pass the callStack.Iterator(). This prevents commands from changing the callStack directly.
                 result = cmd.execute(callStack, Arrays.copyOfRange(cmdArgs, 1, cmdArgs.length), t);

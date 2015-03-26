@@ -15,9 +15,8 @@ public class DebuggerCLI {
 
         final String dAppName = args[0];
         final String[] dAppArgs = Arrays.copyOfRange(args, 1, args.length);
-//        System.out.println("Debugging app: " + dAppName);
 
-        DebuggerInstrumenter t = new DebuggerInstrumenter();
+        ClassEditor t = new ClassEditor();
         ClassPool cp = ClassPool.getDefault();
         Loader cl = new Loader();
         cl.addTranslator(cp, t);

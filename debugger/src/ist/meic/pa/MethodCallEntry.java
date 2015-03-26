@@ -50,8 +50,7 @@ public class MethodCallEntry {
         return args + methodArgs[methodArgs.length - 1] + ")";
     }
 
-    @Override
-    public String toString(){
+    public String print() {
         return this.instanceClass.getCanonicalName() + "." + this.methodName + printArgs(this.methodArgs);
     }
 }
