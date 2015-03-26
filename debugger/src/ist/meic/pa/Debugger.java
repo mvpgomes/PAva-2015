@@ -49,6 +49,11 @@ public class Debugger {
 //        System.out.println(String.format("Removed method \"%s\" from call stack.", e.getInstanceClass().getName() + "." + e.getMethodName()));
     }
 
+    public Object callProxyMethod(Class instanceClass, Object instance, String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
+        return (instanceClass != null || instance != null) ? proxyMethod(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig) :
+                 proxyConstructor(methodName, methodArgsSig, methodArgs, resultSig);
+    }
+
     @SuppressWarnings("unchecked")
     public Object proxyMethod(Class instanceClass, Object instance, String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
         final MethodCallEntry e = new MethodCallEntry(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig);

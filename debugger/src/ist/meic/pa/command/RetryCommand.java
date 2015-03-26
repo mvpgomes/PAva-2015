@@ -18,15 +18,19 @@ public class RetryCommand extends Command {
     public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) throws Throwable {
         try {
             MethodCallEntry calledMethod = stack.peek();
+            Debugger.getInstance().removeLastCall();
 
             Class instanceClass = calledMethod.getInstanceClass();
-            String methodName = calledMethod.getMethodName();
-            Class[] argsClass = calledMethod.getMethodArgsSig();
-            Method m  = instanceClass.getDeclaredMethod(methodName, argsClass);
-
-            Object[] methodArgs = calledMethod.getMethodArgs();
             Object instance = calledMethod.getInstance();
-            return new Tuple<>(Boolean.TRUE, m.invoke(instance, methodArgs));
+
+            String methodName = calledMethod.getMethodName();
+            Class[] methodArgsSig = calledMethod.getMethodArgsSig();
+            Object[] methodArgs = calledMethod.getMethodArgs();
+            Class resultSig = calledMethod.getResultSig();
+
+            Object res = Debugger.getInstance().callProxyMethod(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig);
+
+            return new Tuple<>(Boolean.TRUE, res);
         } catch (NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException(e);
         } catch (InvocationTargetException e) {
