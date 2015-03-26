@@ -1,13 +1,14 @@
 package ist.meic.pa.command;
 
 import ist.meic.pa.MethodCallEntry;
+import ist.meic.pa.Tuple;
 
 import java.lang.reflect.Field;
 import java.util.Stack;
 
 public class InfoCommand extends Command {
     @Override
-    public Object execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) {
+    public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) {
         final MethodCallEntry e = stack.peek();
         final Object instance = e.getInstance();
 
@@ -29,7 +30,7 @@ public class InfoCommand extends Command {
         for (int i = stack.size() - 1; i >= 0; i--) {
             System.out.println(stack.elementAt(i).print());
         }
-        return null;
+        return new Tuple<>(Boolean.FALSE, null);
     }
 }
 

@@ -85,7 +85,7 @@ public class Debugger {
      * @return may return values, depending on the debugger command used.
      */
     public Object repl(Throwable t) throws Throwable {
-        Object result;
+        Tuple<Boolean, Object> result;
         do {
             result = null;
             System.out.print(":> ");
@@ -105,7 +105,7 @@ public class Debugger {
                 // TODO instead of passing callStack, pass the callStack.Iterator(). This prevents commands from changing the callStack directly.
                 result = cmd.execute(callStack, Arrays.copyOfRange(cmdArgs, 1, cmdArgs.length), t);
             }
-        } while (result == null);
-        return result;
+        } while (!result.getFirst());
+        return result.getSecond();
     }
 }

@@ -1,6 +1,7 @@
 package ist.meic.pa.command;
 
 import ist.meic.pa.MethodCallEntry;
+import ist.meic.pa.Tuple;
 import ist.meic.pa.parser.*;
 
 import java.util.HashMap;
@@ -24,5 +25,5 @@ public abstract class Command {
         return parameterParser.get(s);
     }
 
-    public abstract Object execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) throws Throwable;
+    public abstract Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) throws Throwable;
 }
