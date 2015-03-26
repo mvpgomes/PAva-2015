@@ -42,15 +42,18 @@ public class MethodCallEntry {
         return resultSig;
     }
 
-    private static String printArgs(Object[] methodArgs){
-        String args = "(";
-        for(int i=0; i < methodArgs.length - 1; i++){
-            args = methodArgs[i].toString() + ",";
+    private static String printArgArray(Object[] args) {
+        String delim = "";
+        StringBuilder sb = new StringBuilder();
+        for (Object o : args) {
+            sb.append(delim);
+            sb.append(o.getClass().isArray() ? printArgArray((Object[]) o) : o.toString());
+            delim = ",";
         }
-        return args + methodArgs[methodArgs.length - 1] + ")";
+        return sb.toString();
     }
 
     public String print() {
-        return this.instanceClass.getCanonicalName() + "." + this.methodName + printArgs(this.methodArgs);
+        return this.instanceClass.getCanonicalName() + "." + this.methodName + "(" + printArgArray(this.methodArgs) + ")";
     }
 }

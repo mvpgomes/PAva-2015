@@ -6,10 +6,16 @@ import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
 public class ClassEditor extends ExprEditor implements Translator {
+    private String testClass;
+
+    public ClassEditor(String testClass) {
+        this.testClass = testClass;
+    }
+
     private void instrumentMethods(final CtClass c) {
         try {
             for (CtMethod m : c.getDeclaredMethods()) {
-                System.out.println("Instrumenting method calls inside " + m.getLongName());
+//                System.out.println("Instrumenting method calls inside " + m.getLongName());
                 if (!m.isEmpty()) {
                     m.instrument(this);
                 }
@@ -21,7 +27,7 @@ public class ClassEditor extends ExprEditor implements Translator {
 
         try {
             for (CtConstructor cc : c.getDeclaredConstructors()) {
-                System.out.println("Instrumenting constructor: " + cc.getName());
+//                System.out.println("Instrumenting constructor: " + cc.getName());
                 if (!cc.isEmpty()) {
                     cc.instrument(this);
                 }
@@ -55,9 +61,9 @@ public class ClassEditor extends ExprEditor implements Translator {
     public void onLoad(ClassPool classPool, String className) throws NotFoundException, CannotCompileException {
         if (!className.startsWith("ist.meic.pa") && !className.startsWith("javassist")) {
             CtClass c = classPool.get(className);
-            System.out.println("Instrumenting class: " + className);
+//            System.out.println("Instrumenting class: " + className);
             instrumentMethods(c);
-            System.out.println("I've instrumented class: " + className);
+//            System.out.println("I've instrumented class: " + className);
         }
     }
 }

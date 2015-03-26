@@ -1,7 +1,6 @@
 package ist.meic.pa;
 
-import javassist.ClassPool;
-import javassist.Loader;
+import javassist.*;
 
 import java.util.Arrays;
 
@@ -16,11 +15,16 @@ public class DebuggerCLI {
         final String dAppName = args[0];
         final String[] dAppArgs = Arrays.copyOfRange(args, 1, args.length);
 
-        ClassEditor t = new ClassEditor();
+        ClassEditor t = new ClassEditor(dAppName);
         ClassPool cp = ClassPool.getDefault();
         Loader cl = new Loader();
         cl.addTranslator(cp, t);
-        cl.run(dAppName, dAppArgs);
+
+        CtClass newClass = cp.makeClass("DebuggerCLI-Fake");
+        CtMethod newMethod  = CtNewMethod.make(String.format("public static void main(String[] args) { %s.main(args); }", dAppName), newClass);
+        newClass.addMethod(newMethod);
+
+        cl.run("DebuggerCLI-Fake", dAppArgs);
     }
 }
 
