@@ -21,7 +21,7 @@ public class DebuggerCLI {
         cl.addTranslator(cp, t);
 
         CtClass newClass = cp.makeClass("DebuggerCLI-Fake");
-        CtMethod newMethod  = CtNewMethod.make(String.format("public static void main(String[] args) { %s.main(args); }", dAppName), newClass);
+        CtMethod newMethod = CtNewMethod.make(String.format("public static void main(String[] args) { %s.main(args); }", dAppName), newClass);
         newClass.addMethod(newMethod);
 
         cl.run("DebuggerCLI-Fake", dAppArgs);

@@ -1,6 +1,5 @@
 package ist.meic.pa.command;
 
-import ist.meic.pa.Debugger;
 import ist.meic.pa.MethodCallEntry;
 import ist.meic.pa.Tuple;
 
@@ -10,30 +9,21 @@ import java.util.Stack;
 
 /**
  * TODO Note that this command can lead to StackOverflowError.
- * TODO ERROR here replace this code by calling proxy directly.
  */
 public class RetryCommand extends Command {
     @Override
     @SuppressWarnings("unchecked")
     public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) throws Throwable {
         try {
-            MethodCallEntry calledMethod = stack.peek();
-            Debugger.getInstance().removeLastCall();
-
-            Class instanceClass = calledMethod.getInstanceClass();
-            Object instance = calledMethod.getInstance();
-
-            String methodName = calledMethod.getMethodName();
-            Class[] methodArgsSig = calledMethod.getMethodArgsSig();
-            Object[] methodArgs = calledMethod.getMethodArgs();
-            Class resultSig = calledMethod.getResultSig();
-
-            Object res = Debugger.getInstance().callProxyMethod(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig);
-
-            return new Tuple<>(Boolean.TRUE, res);
+            final MethodCallEntry e = stack.peek();
+            final Method m = e.getInstanceClass().getDeclaredMethod(e.getMethodName(), e.getMethodArgsSig());
+            return new Tuple<>(Boolean.TRUE, m.invoke(e.getInstance(), e.getMethodArgs()));
         } catch (NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException(e);
         } catch (InvocationTargetException e) {
+            // This exception occurs when an exception is thrown in the proxy method, and
+            // it is wrapped by the InvocationTargetException, which we do not want (we
+            // want the real message).
             throw e.getCause();
         }
     }

@@ -19,7 +19,7 @@ public class GetCommand extends Command {
 
             return new Tuple<>(Boolean.FALSE, null);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-          throw new RuntimeException(e);
+            throw new RuntimeException(e);
         }
     }
 }

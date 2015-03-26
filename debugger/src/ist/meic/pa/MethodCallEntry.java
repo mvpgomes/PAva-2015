@@ -18,6 +18,17 @@ public class MethodCallEntry {
         this.resultSig = resultSig;
     }
 
+    private static String printArgArray(Object[] args) {
+        String delim = "";
+        StringBuilder sb = new StringBuilder();
+        for (Object o : args) {
+            sb.append(delim);
+            sb.append(o.getClass().isArray() ? printArgArray((Object[]) o) : o.toString());
+            delim = ",";
+        }
+        return sb.toString();
+    }
+
     public Class getInstanceClass() {
         return instanceClass;
     }
@@ -40,17 +51,6 @@ public class MethodCallEntry {
 
     public Class getResultSig() {
         return resultSig;
-    }
-
-    private static String printArgArray(Object[] args) {
-        String delim = "";
-        StringBuilder sb = new StringBuilder();
-        for (Object o : args) {
-            sb.append(delim);
-            sb.append(o.getClass().isArray() ? printArgArray((Object[]) o) : o.toString());
-            delim = ",";
-        }
-        return sb.toString();
     }
 
     public String print() {

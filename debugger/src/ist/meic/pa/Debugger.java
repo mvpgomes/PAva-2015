@@ -39,19 +39,19 @@ public class Debugger {
         return instance;
     }
 
-    public void addCall(MethodCallEntry e) {
+    private void addCall(MethodCallEntry e) {
         callStack.push(e);
 //        System.out.println(String.format("Added method \"%s\" to call stack.", e.getInstanceClass().getName() + "." + e.getMethodName()));
     }
 
-    public void removeLastCall() {
+    private void removeLastCall() {
         MethodCallEntry e = callStack.pop();
 //        System.out.println(String.format("Removed method \"%s\" from call stack.", e.getInstanceClass().getName() + "." + e.getMethodName()));
     }
 
     public Object callProxyMethod(Class instanceClass, Object instance, String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
         return (instanceClass != null || instance != null) ? proxyMethod(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig) :
-                 proxyConstructor(methodName, methodArgsSig, methodArgs, resultSig);
+                proxyConstructor(methodName, methodArgsSig, methodArgs, resultSig);
     }
 
     @SuppressWarnings("unchecked")
@@ -89,7 +89,7 @@ public class Debugger {
      *
      * @return may return values, depending on the debugger command used.
      */
-    public Object repl(Throwable t) throws Throwable {
+    private Object repl(Throwable t) throws Throwable {
         Tuple<Boolean, Object> result;
         do {
             result = null;
@@ -107,7 +107,6 @@ public class Debugger {
             if (cmd == null) {
                 System.out.println("Unknown command. Try again.");
             } else {
-                // TODO instead of passing callStack, pass the callStack.Iterator(). This prevents commands from changing the callStack directly.
                 result = cmd.execute(callStack, Arrays.copyOfRange(cmdArgs, 1, cmdArgs.length), t);
             }
         } while (!result.getFirst());

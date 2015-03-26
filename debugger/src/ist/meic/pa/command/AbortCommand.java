@@ -9,6 +9,6 @@ public class AbortCommand extends Command {
     @Override
     public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) throws Throwable {
         System.exit(0);
-        return null;
+        return new Tuple<>(Boolean.TRUE, null);
     }
 }

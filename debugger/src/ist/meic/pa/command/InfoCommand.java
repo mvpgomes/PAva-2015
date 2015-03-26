@@ -21,6 +21,7 @@ public class InfoCommand extends Command {
         System.out.print("       Fields:");
         Field[] fields = instanceClass.getDeclaredFields();
         for (Field f : fields) {
+            f.setAccessible(true);
             System.out.print(" " + f.getName());
         }
         System.out.println();
