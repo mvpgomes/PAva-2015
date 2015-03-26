@@ -6,8 +6,7 @@ import java.util.Stack;
 
 public class ThrowCommand extends Command {
     @Override
-    public Object execute(Stack<MethodCallEntry> stack, Object calledObject, String[] args, Throwable t) throws Throwable {
-        stack.pop();
-        throw t;
+    public Object execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) throws Throwable {
+        throw t.getCause();
     }
 }

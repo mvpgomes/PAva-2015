@@ -4,16 +4,16 @@ public class MethodCallEntry {
     private final Class instanceClass;
     private final Object instance;
     private final String methodName;
-    private final Class[] methodSig;
+    private final Class[] methodArgsSig;
     private final Object[] methodArgs;
     private final Class resultSig;
 
-    public MethodCallEntry(Class instanceClass, Object instance, String methodName, Class[] methodSig, Object[] methodArgs,
+    public MethodCallEntry(Class instanceClass, Object instance, String methodName, Class[] methodArgsSig, Object[] methodArgs,
                            Class resultSig) {
         this.instanceClass = instanceClass;
         this.instance = instance;
         this.methodName = methodName;
-        this.methodSig = methodSig;
+        this.methodArgsSig = methodArgsSig;
         this.methodArgs = methodArgs;
         this.resultSig = resultSig;
     }
@@ -30,8 +30,8 @@ public class MethodCallEntry {
         return methodName;
     }
 
-    public Class[] getMethodSig() {
-        return methodSig;
+    public Class[] getMethodArgsSig() {
+        return methodArgsSig;
     }
 
     public Object[] getMethodArgs() {
@@ -42,7 +42,7 @@ public class MethodCallEntry {
         return resultSig;
     }
 
-    public String printArgs(Object[] methodArgs){
+    private static String printArgs(Object[] methodArgs){
         String args = "(";
         for(int i=0; i < methodArgs.length - 1; i++){
             args = methodArgs[i].toString() + ",";
@@ -52,6 +52,6 @@ public class MethodCallEntry {
 
     @Override
     public String toString(){
-        return this.instanceClass.getName() + "." + this.methodName + this.printArgs(this.methodArgs);
+        return this.instanceClass.getCanonicalName() + "." + this.methodName + printArgs(this.methodArgs);
     }
 }

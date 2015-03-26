@@ -6,7 +6,7 @@ import java.util.Stack;
 
 public class AbortCommand extends Command {
     @Override
-    public Object execute(Stack<MethodCallEntry> stack, Object calledObject, String[] args, Throwable t) throws Throwable {
+    public Object execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) throws Throwable {
         System.exit(0);
         return null;
     }

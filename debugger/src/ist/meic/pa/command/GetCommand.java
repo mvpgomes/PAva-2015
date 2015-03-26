@@ -7,14 +7,18 @@ import java.util.Stack;
 
 public class GetCommand extends Command {
     @Override
-    public Object execute(Stack<MethodCallEntry> stack, Object calledObject, String[] args, Throwable t) throws Throwable {
+    public Object execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) {
+        Object instance = stack.peek().getInstance();
         try {
-            Field field = calledObject.getClass().getDeclaredField(args[0]);
+            Field field = instance.getClass().getDeclaredField(args[0]);
             field.setAccessible(true);
-            System.out.println(field.get(calledObject));
-        } catch (Throwable tt) {
-            tt.printStackTrace();
+
+            // Print instance.field
+            System.out.println(field.get(instance));
+
+            return null;
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+          throw new RuntimeException(e);
         }
-        return null;
     }
 }

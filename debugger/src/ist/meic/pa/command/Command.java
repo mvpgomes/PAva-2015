@@ -20,9 +20,9 @@ public abstract class Command {
         put("String", new StringParser());
     }};
 
-    public Map<String, Parser> getParameterParser() {
-        return parameterParser;
+    public Parser getParameterParser(String s) {
+        return parameterParser.get(s);
     }
 
-    public abstract Object execute(Stack<MethodCallEntry> stack, Object calledObject, String[] args, Throwable t) throws Throwable;
+    public abstract Object execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) throws Throwable;
 }

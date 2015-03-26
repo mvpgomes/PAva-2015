@@ -38,33 +38,36 @@ public class Debugger {
         return instance;
     }
 
-    public void addCall(Class instanceClass, Object instance, String methodName,
-                        Class[] methodSig, Object[] methodArgs, Class resultSig) {
-        final MethodCallEntry i = new MethodCallEntry(instanceClass, instance, methodName, methodSig, methodArgs, resultSig);
-        callStack.push(i);
-        System.out.println("Added method to call stack.");
-        print(i);
+    public void addCall(MethodCallEntry e) {
+        callStack.push(e);
+//        System.out.println(String.format("Added method \"%s\" to call stack.", e.getInstanceClass().getName() + "." + e.getMethodName()));
     }
 
-    public Object proxy(Object instance, Class c, String methodName, Class[] argTypes, Class resultSig) throws Throwable {
-        addCall(c, instance, methodName, argTypes, null, resultSig);
-        System.out.println("Banana");
+    public void removeLastCall() {
+        MethodCallEntry e = callStack.pop();
+//        System.out.println(String.format("Removed method \"%s\" from call stack.", e.getInstanceClass().getName() + "." + e.getMethodName()));
+    }
+
+    @SuppressWarnings("unchecked")
+    public Object proxy(Class instanceClass, Object instance, String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
+        final MethodCallEntry e = new MethodCallEntry(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig);
+        addCall(e);
         try {
-            Method m = c.getDeclaredMethod(methodName, argTypes);
-            return m.invoke(instance);
+            Method m = instanceClass.getDeclaredMethod(methodName, methodArgsSig);
+            return m.invoke(instance, methodArgs);
         } catch (Throwable t) {
-            return inspect(t);
+            System.out.println(t.getCause().toString());
+            return repl(t);
+        } finally {
+            removeLastCall();
         }
     }
 
-    public Object proxy(Object instance, Class c, String methodName, Class[] argTypes, Class resultSig, Object[] argValues) throws Throwable {
-        addCall(c, instance, methodName, argTypes, argValues, resultSig);
-        try {
-            Method m = c.getDeclaredMethod(methodName, argTypes);
-            return m.invoke(instance, argValues);
-        } catch (Throwable t) {
-            return inspect(t);
-        }
+    /**
+     * Used by constructor calls. They neither have an instance object, nor a return type.
+     */
+    public void proxy(Class instanceClass, String methodName, Class[] methodArgsSig, Object[] methodArgs) throws Throwable {
+        proxy(instanceClass, null, methodName, methodArgsSig, methodArgs, null);
     }
 
     /**
@@ -72,44 +75,28 @@ public class Debugger {
      *
      * @return may return values, depending on the debugger command used.
      */
-    public Object inspect(Throwable t) throws Throwable {
-        Object response;
+    public Object repl(Throwable t) throws Throwable {
+        Object result;
         do {
+            result = null;
             System.out.print(":> ");
             String[] cmdArgs = null;
 
             try {
                 cmdArgs = in.readLine().split(" ");
             } catch (Throwable e) {
-                System.out.println("Invalid input");
+                System.out.println("Error reading from input.");
                 System.exit(1);
             }
 
             Command cmd = commands.get(cmdArgs[0]);
-            response = cmd.execute(callStack, callStack.peek().getInstance(), Arrays.copyOfRange(cmdArgs, 1, cmdArgs.length), t);
-        } while (response == null);
-
-        return response;
-    }
-
-    private void print(MethodCallEntry i) {
-        System.out.println("Classname: " + i.getInstanceClass().getName());
-
-        if (i.getInstance() != null) {
-            System.out.println("Instance.toString(): " + i.getInstance().toString());
-        }
-
-        if (i.getResultSig() == null) {
-            System.out.print("Method: void ");
-        } else {
-            System.out.print("Method: " + i.getResultSig().toString() + " ");
-        }
-
-        System.out.print(i.getMethodName());
-        System.out.print("(");
-        for (Class m : i.getMethodSig()) {
-            System.out.print(m.getSimpleName() + ", ");
-        }
-        System.out.println(")");
+            if (cmd == null) {
+                System.out.println("Unknown command.");
+            } else {
+                // TODO instead of passing callStack, pass the callStack.Iterator(). This prevents commands from changing the callStack directly.
+                result = cmd.execute(callStack, Arrays.copyOfRange(cmdArgs, 1, cmdArgs.length), t);
+            }
+        } while (result == null);
+        return result;
     }
 }
