@@ -5,19 +5,21 @@ import ist.meic.pa.MethodCallEntry;
 import ist.meic.pa.Tuple;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Stack;
 
 /**
- * TODO Note that this command can lead to StackOverflowError.
+ * The retry command invokes the last method in the method call stack (the method that generated the exception that led
+ * to the repl).
  */
 public class RetryCommand extends Command {
+    /**
+     * Note that this implementation removes the last element from the stack.
+     */
     @Override
     @SuppressWarnings("unchecked")
     public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) throws Throwable {
         try {
-            final MethodCallEntry e = stack.peek();
-            Debugger.getInstance().removeLastCall();
+            final MethodCallEntry e = stack.pop();
             return new Tuple<>(Boolean.TRUE, Debugger.getInstance().callProxyMethod(e.getInstanceClass(),
                     e.getInstance(), e.getMethodName(), e.getMethodArgsSig(), e.getMethodArgs(), e.getResultSig()));
         } catch (NoSuchMethodException | IllegalAccessException e) {
