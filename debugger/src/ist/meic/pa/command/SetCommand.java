@@ -1,5 +1,6 @@
 package ist.meic.pa.command;
 
+import ist.meic.pa.GenericParser;
 import ist.meic.pa.MethodCallEntry;
 import ist.meic.pa.Tuple;
 
@@ -11,7 +12,7 @@ import java.util.Stack;
  * value. This command expects two arguments, args[0] and args[1], where args[0] is the name of the variable of the
  * object and args[1] is the new value for that variable.
  */
-public class SetCommand extends Command {
+public class SetCommand implements Command {
     @Override
     public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) {
         try {
@@ -19,8 +20,7 @@ public class SetCommand extends Command {
             Field field = instance.getClass().getDeclaredField(args[0]);
             field.setAccessible(true);
 
-            String fieldType = field.getType().getSimpleName();
-            Object parsedValue = getParameterParser(fieldType).parse(args[1]);
+            Object parsedValue = GenericParser.parse(field.getType(), args[1]);
             field.set(instance, parsedValue);
 
             return new Tuple<>(Boolean.FALSE, null);

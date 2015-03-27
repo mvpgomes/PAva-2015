@@ -11,23 +11,7 @@ import java.util.Stack;
 /**
  * This interface serves as an example of the command pattern.
  */
-public abstract class Command {
-    private final Map<String, Parser> parameterParser = new HashMap<String, Parser>() {{
-        put("byte", new ByteParser());
-        put("short", new ShortParser());
-        put("int", new IntegerParser());
-        put("long", new LongParser());
-        put("float", new FloatParser());
-        put("double", new DoubleParser());
-        put("boolean", new ByteParser());
-        put("char", new CharParser());
-        put("String", new StringParser());
-    }};
-
-    public Parser getParameterParser(String s) {
-        return parameterParser.get(s);
-    }
-
+public interface Command {
     /**
      * The method to be implemented by the commands.
      *

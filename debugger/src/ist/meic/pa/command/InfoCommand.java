@@ -11,7 +11,7 @@ import java.util.Stack;
  * information about the methods in the call stack, such as method name, method args and corresponding values.
  * This method does not expect any arguments.
  */
-public class InfoCommand extends Command {
+public class InfoCommand implements Command {
     @Override
     public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) {
         final MethodCallEntry e = stack.peek();

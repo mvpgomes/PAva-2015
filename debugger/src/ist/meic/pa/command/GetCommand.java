@@ -10,7 +10,7 @@ import java.util.Stack;
  * The get command prints the value of a given variable that belongs to the last object in the call stack.
  * This command expects an argument, args[0], to be the name of the variable.
  */
-public class GetCommand extends Command {
+public class GetCommand implements Command {
     @Override
     public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) {
         Object instance = stack.peek().getInstance();

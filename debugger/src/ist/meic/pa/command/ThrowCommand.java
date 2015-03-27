@@ -8,7 +8,7 @@ import java.util.Stack;
 /**
  * This command rethrows the exception that generated the repl.
  */
-public class ThrowCommand extends Command {
+public class ThrowCommand implements Command {
     /**
      * Note that this implementation removes the last element from the stack.
      */
