@@ -44,7 +44,7 @@ public class Debugger {
 //        System.out.println(String.format("Added method \"%s\" to call stack.", e.getInstanceClass().getName() + "." + e.getMethodName()));
     }
 
-    private void removeLastCall() {
+    public void removeLastCall() {
         MethodCallEntry e = callStack.pop();
 //        System.out.println(String.format("Removed method \"%s\" from call stack.", e.getInstanceClass().getName() + "." + e.getMethodName()));
     }
@@ -60,12 +60,12 @@ public class Debugger {
         addCall(e);
         try {
             Method m = instanceClass.getDeclaredMethod(methodName, methodArgsSig);
-            return m.invoke(instance, methodArgs);
+            Object res = m.invoke(instance, methodArgs);
+            removeLastCall();
+            return res;
         } catch (Throwable t) {
             System.out.println(t.getCause().toString());
             return repl(t);
-        } finally {
-            removeLastCall();
         }
     }
 
@@ -75,12 +75,12 @@ public class Debugger {
         addCall(e);
         try {
             Constructor c = resultSig.getDeclaredConstructor(methodArgsSig);
-            return c.newInstance(methodArgs);
+            Object res =  c.newInstance(methodArgs);
+            removeLastCall();
+            return res;
         } catch (Throwable t) {
             System.out.println(t.getCause().toString());
             return repl(t);
-        } finally {
-            removeLastCall();
         }
     }
 

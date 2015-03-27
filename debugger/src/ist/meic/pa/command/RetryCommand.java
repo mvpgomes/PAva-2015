@@ -31,7 +31,6 @@ public class RetryCommand extends Command {
     @SuppressWarnings("unchecked")
     public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) throws Throwable {
         try {
-
             final MethodCallEntry calledMethod = stack.peek();
             Debugger.getInstance().removeLastCall();
 
