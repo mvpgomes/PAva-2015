@@ -39,16 +39,6 @@ public class Debugger {
         return instance;
     }
 
-    private void addCall(MethodCallEntry e) {
-        callStack.push(e);
-//        System.out.println(String.format("Added method \"%s\" to call stack.", e.getInstanceClass().getName() + "." + e.getMethodName()));
-    }
-
-    public void removeLastCall() {
-        MethodCallEntry e = callStack.pop();
-//        System.out.println(String.format("Removed method \"%s\" from call stack.", e.getInstanceClass().getName() + "." + e.getMethodName()));
-    }
-
     public Object callProxyMethod(Class instanceClass, Object instance, String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
         return (instanceClass != null || instance != null) ? proxyMethod(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig) :
                 proxyConstructor(methodName, methodArgsSig, methodArgs, resultSig);
@@ -57,11 +47,11 @@ public class Debugger {
     @SuppressWarnings("unchecked")
     public Object proxyMethod(Class instanceClass, Object instance, String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
         final MethodCallEntry e = new MethodCallEntry(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig);
-        addCall(e);
+        callStack.push(e);
         try {
             Method m = instanceClass.getDeclaredMethod(methodName, methodArgsSig);
             Object res = m.invoke(instance, methodArgs);
-            removeLastCall();
+            callStack.pop();
             return res;
         } catch (Throwable t) {
             System.out.println(t.getCause().toString());
@@ -72,11 +62,11 @@ public class Debugger {
     @SuppressWarnings("unchecked")
     public Object proxyConstructor(String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
         final MethodCallEntry e = new MethodCallEntry(null, null, methodName, methodArgsSig, methodArgs, resultSig);
-        addCall(e);
+        callStack.push(e);
         try {
             Constructor c = resultSig.getDeclaredConstructor(methodArgsSig);
             Object res =  c.newInstance(methodArgs);
-            removeLastCall();
+            callStack.pop();
             return res;
         } catch (Throwable t) {
             System.out.println(t.getCause().toString());

@@ -6,11 +6,16 @@ import ist.meic.pa.MethodCallEntry;
 import ist.meic.pa.Tuple;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Stack;
 
+/**
+ * The retry command invokes the last method in the method call stack (the method that generated the exception that led
+ * to the repl).
+ */
 public class RetryCommand implements Command {
-
+    /**
+     * Note that this implementation removes the last element from the stack.
+     */
     public Object executeRetryCommand(Class instanceClass, Object instance, String methodName,
                                       Class[] methodArgsSig, Object[] args, Class resultSig) throws Throwable {
 
@@ -32,8 +37,7 @@ public class RetryCommand implements Command {
     @SuppressWarnings("unchecked")
     public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) throws Throwable {
         try {
-            final MethodCallEntry calledMethod = stack.peek();
-            Debugger.getInstance().removeLastCall();
+            final MethodCallEntry calledMethod = stack.pop();
 
             Class instanceClass = calledMethod.getInstanceClass();
             Object instance = calledMethod.getInstance();
