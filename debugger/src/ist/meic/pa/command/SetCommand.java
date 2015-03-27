@@ -1,5 +1,6 @@
 package ist.meic.pa.command;
 
+import ist.meic.pa.GenericParser;
 import ist.meic.pa.MethodCallEntry;
 import ist.meic.pa.Tuple;
 
@@ -14,8 +15,7 @@ public class SetCommand extends Command {
             Field field = instance.getClass().getDeclaredField(args[0]);
             field.setAccessible(true);
 
-            String fieldType = field.getType().getSimpleName();
-            Object parsedValue = getParameterParser(fieldType).parse(args[1]);
+            Object parsedValue = GenericParser.parse(field.getType(), args[1]);
             field.set(instance, parsedValue);
 
             return new Tuple<>(Boolean.FALSE, null);

@@ -1,6 +1,7 @@
 package ist.meic.pa.command;
 
 import ist.meic.pa.Debugger;
+import ist.meic.pa.GenericParser;
 import ist.meic.pa.MethodCallEntry;
 import ist.meic.pa.Tuple;
 
@@ -13,7 +14,7 @@ public class ReturnCommand extends Command {
         Debugger.getInstance().removeLastCall();
 
         final Class returnTypeClass = calledMethod.getResultSig();
-        final Object res = getParameterParser(returnTypeClass.getSimpleName()).parse(args[0]);
+        final Object res = GenericParser.parse(returnTypeClass, args[0]);
         return new Tuple<>(Boolean.TRUE, res);
     }
 }

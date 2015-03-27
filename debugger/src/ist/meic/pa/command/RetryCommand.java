@@ -1,6 +1,7 @@
 package ist.meic.pa.command;
 
 import ist.meic.pa.Debugger;
+import ist.meic.pa.GenericParser;
 import ist.meic.pa.MethodCallEntry;
 import ist.meic.pa.Tuple;
 
@@ -21,7 +22,7 @@ public class RetryCommand extends Command {
 
         Object[] methodArgs = new Object[args.length];
         for(int i = 0; i < args.length; i++) {
-            methodArgs[i] = getParameterParser(methodArgsSig[i].getSimpleName()).parse(args[i]);
+            methodArgs[i] = GenericParser.parse(methodArgsSig[i], args[i]);
         }
 
         return Debugger.getInstance().callProxyMethod(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig);
