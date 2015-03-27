@@ -6,7 +6,7 @@ import ist.meic.pa.Tuple;
 import java.lang.reflect.Field;
 import java.util.Stack;
 
-public class GetCommand extends Command {
+public class GetCommand implements Command {
     @Override
     public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) {
         Object instance = stack.peek().getInstance();

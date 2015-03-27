@@ -6,7 +6,7 @@ import ist.meic.pa.Tuple;
 
 import java.util.Stack;
 
-public class ThrowCommand extends Command {
+public class ThrowCommand implements Command {
     @Override
     public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) throws Throwable {
         Debugger.getInstance().removeLastCall();

@@ -9,7 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Stack;
 
-public class RetryCommand extends Command {
+public class RetryCommand implements Command {
 
     public Object executeRetryCommand(Class instanceClass, Object instance, String methodName,
                                       Class[] methodArgsSig, Object[] args, Class resultSig) throws Throwable {
