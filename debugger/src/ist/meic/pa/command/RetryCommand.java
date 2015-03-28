@@ -36,28 +36,20 @@ public class RetryCommand implements Command {
     @Override
     @SuppressWarnings("unchecked")
     public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) throws Throwable {
-        try {
-            final MethodCallEntry calledMethod = stack.pop();
+        final MethodCallEntry calledMethod = stack.pop();
 
-            Class instanceClass = calledMethod.getInstanceClass();
-            Object instance = calledMethod.getInstance();
+        Class instanceClass = calledMethod.getInstanceClass();
+        Object instance = calledMethod.getInstance();
 
-            String methodName = calledMethod.getMethodName();
-            Class[] methodArgsSig = calledMethod.getMethodArgsSig();
-            Object[] methodArgs = calledMethod.getMethodArgs();
-            Class resultSig = calledMethod.getResultSig();
+        String methodName = calledMethod.getMethodName();
+        Class[] methodArgsSig = calledMethod.getMethodArgsSig();
+        Object[] methodArgs = calledMethod.getMethodArgs();
+        Class resultSig = calledMethod.getResultSig();
 
-            Object res = (args.length == 0) ? executeRetryCommand(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig) :
-                    executeModifiedRetryCommand(instanceClass, instance, methodName, methodArgsSig, args, resultSig);
+        Object res = (args.length == 0) ?
+                executeRetryCommand(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig) :
+                executeModifiedRetryCommand(instanceClass, instance, methodName, methodArgsSig, args, resultSig);
 
-            return new Tuple<>(Boolean.TRUE, res);
-        } catch (NoSuchMethodException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        } catch (InvocationTargetException e) {
-            // This exception occurs when an exception is thrown in the proxy method, and
-            // it is wrapped by the InvocationTargetException, which we do not want (we
-            // want the real message).
-            throw e.getCause();
-        }
+        return new Tuple<>(Boolean.TRUE, res);
     }
 }

@@ -23,7 +23,11 @@ public class MethodCallEntry {
         StringBuilder sb = new StringBuilder();
         for (Object o : args) {
             sb.append(delim);
-            sb.append(o.getClass().isArray() ? printArgArray((Object[]) o) : o.toString());
+            if (o == null) {
+                sb.append("null");
+            } else {
+                sb.append(o.getClass().isArray() ? printArgArray((Object[]) o) : o.toString());
+            }
             delim = ",";
         }
         return sb.toString();

@@ -5,6 +5,7 @@ import ist.meic.pa.command.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -40,7 +41,8 @@ public class Debugger {
     }
 
     public Object callProxyMethod(Class instanceClass, Object instance, String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
-        return (instanceClass != null || instance != null) ? proxyMethod(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig) :
+        return (instanceClass != null || instance != null) ?
+                proxyMethod(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig) :
                 proxyConstructor(methodName, methodArgsSig, methodArgs, resultSig);
     }
 
@@ -53,9 +55,14 @@ public class Debugger {
             Object res = m.invoke(instance, methodArgs);
             callStack.pop();
             return res;
-        } catch (Throwable t) {
-            System.out.println(t.getCause().toString());
-            return repl(t);
+        } catch (NoSuchMethodException | IllegalAccessException t) {
+            // This error should never happen.
+            t.printStackTrace();
+            System.exit(1);
+            return null;
+        } catch (InvocationTargetException t) {
+            System.out.println(t.getTargetException().toString());
+            return repl(t.getTargetException());
         }
     }
 
@@ -68,9 +75,14 @@ public class Debugger {
             Object res =  c.newInstance(methodArgs);
             callStack.pop();
             return res;
-        } catch (Throwable t) {
-            System.out.println(t.getCause().toString());
-            return repl(t);
+        } catch (NoSuchMethodException | IllegalAccessException | InstantiationException t) {
+            // This error should never happen.
+            t.printStackTrace();
+            System.exit(1);
+            return null;
+        } catch (InvocationTargetException t) {
+            System.out.println(t.getTargetException().toString());
+            return repl(t.getTargetException());
         }
     }
 
@@ -82,7 +94,7 @@ public class Debugger {
     private Object repl(Throwable t) throws Throwable {
         Tuple<Boolean, Object> result;
         do {
-            result = null;
+            result = new Tuple<>(Boolean.FALSE, null);
             System.out.print(":> ");
             String[] cmdArgs = null;
 

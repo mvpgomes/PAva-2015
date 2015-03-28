@@ -15,6 +15,6 @@ public class ThrowCommand implements Command {
     @Override
     public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) throws Throwable {
         stack.pop();
-        throw t.getCause();
+        throw t;
     }
 }
