@@ -1,5 +1,7 @@
 package ist.meic.pa;
 
+import ist.meic.pa.editor.ConstructorCallEditor;
+import ist.meic.pa.editor.MethodCallEditor;
 import javassist.*;
 
 import java.util.Arrays;
@@ -15,7 +17,7 @@ public class DebuggerCLI {
         final String dAppName = args[0];
         final String[] dAppArgs = Arrays.copyOfRange(args, 1, args.length);
 
-        ClassEditor t = new ClassEditor();
+        ClassEditor t = new ClassEditor(Arrays.asList(new ConstructorCallEditor(), new MethodCallEditor()));
         ClassPool cp = ClassPool.getDefault();
         Loader cl = new Loader();
         cl.addTranslator(cp, t);
