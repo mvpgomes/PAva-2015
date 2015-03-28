@@ -61,6 +61,7 @@ public class Debugger {
         callStack.push(e);
         try {
             Method m = instanceClass.getDeclaredMethod(methodName, methodArgsSig);
+            m.setAccessible(true);
             Object res = m.invoke(instance, methodArgs);
             callStack.pop();
             return res;
@@ -81,10 +82,11 @@ public class Debugger {
      */
     @SuppressWarnings("unchecked")
     public Object proxyConstructor(String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
-        final MethodCallEntry e = new MethodCallEntry(null, null, methodName, methodArgsSig, methodArgs, resultSig);
+        final MethodCallEntry e = new MethodCallEntry(resultSig, null, methodName, methodArgsSig, methodArgs, resultSig);
         callStack.push(e);
         try {
             Constructor c = resultSig.getDeclaredConstructor(methodArgsSig);
+            c.setAccessible(true);
             Object res =  c.newInstance(methodArgs);
             callStack.pop();
             return res;

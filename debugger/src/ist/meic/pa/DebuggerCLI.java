@@ -3,8 +3,11 @@ package ist.meic.pa;
 import ist.meic.pa.editor.ConstructorCallEditor;
 import ist.meic.pa.editor.MethodCallEditor;
 import javassist.*;
+import javassist.compiler.ast.Expr;
+import javassist.expr.ExprEditor;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 
 public class DebuggerCLI {
     public static void main(String[] args) throws Throwable {
@@ -17,7 +20,8 @@ public class DebuggerCLI {
         final String dAppName = args[0];
         final String[] dAppArgs = Arrays.copyOfRange(args, 1, args.length);
 
-        ClassEditor t = new ClassEditor(Arrays.asList(new ConstructorCallEditor(), new MethodCallEditor()));
+        // The order of the editors must be preserved.
+        ClassEditor t = new ClassEditor(Arrays.asList(new MethodCallEditor(), new ConstructorCallEditor()));
         ClassPool cp = ClassPool.getDefault();
         Loader cl = new Loader();
         cl.addTranslator(cp, t);
