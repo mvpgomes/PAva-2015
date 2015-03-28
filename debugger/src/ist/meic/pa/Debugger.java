@@ -110,7 +110,7 @@ public class Debugger {
         Tuple<Boolean, Object> result;
         do {
             result = new Tuple<>(Boolean.FALSE, null);
-            System.out.print(":> ");
+            System.out.print("DebuggerCLI:> ");
             String[] cmdArgs = null;
 
             try {
