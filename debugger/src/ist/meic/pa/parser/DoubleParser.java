@@ -1,6 +1,6 @@
 package ist.meic.pa.parser;
 
-public class DoubleParser extends Parser {
+public class DoubleParser implements Parser {
     @Override
     public Object parse(String value) {
         return Double.parseDouble(value);

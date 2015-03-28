@@ -1,5 +1,8 @@
 package ist.meic.pa;
 
+/**
+ * This class is used to store the information of a method call.
+ */
 public class MethodCallEntry {
     private final Class instanceClass;
     private final Object instance;

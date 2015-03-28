@@ -1,23 +1,22 @@
 package ist.meic.pa;
 
+import ist.meic.pa.editor.ConstructorCallEditor;
+import ist.meic.pa.editor.MethodCallEditor;
 import javassist.*;
-import javassist.expr.ExprEditor;
-import javassist.expr.MethodCall;
-import javassist.expr.NewExpr;
 
-public class ClassEditor extends ExprEditor implements Translator {
-    private String testClass;
-
-    public ClassEditor(String testClass) {
-        this.testClass = testClass;
-    }
+/**
+ * This class is used to instrument all the methods of the to be debugged app.
+ * It does not instrument classes from javassist or from this project.
+ */
+public class ClassEditor implements Translator {
+    private static final MethodCallEditor methodCallEditor = new MethodCallEditor();
+    private static final ConstructorCallEditor constructorCallEditor = new ConstructorCallEditor();
 
     private void instrumentMethods(final CtClass c) {
         try {
             for (CtMethod m : c.getDeclaredMethods()) {
-//                System.out.println("Instrumenting method calls inside " + m.getLongName());
                 if (!m.isEmpty()) {
-                    m.instrument(this);
+                    m.instrument(methodCallEditor);
                 }
             }
         } catch (Throwable t) {
@@ -27,28 +26,13 @@ public class ClassEditor extends ExprEditor implements Translator {
 
         try {
             for (CtConstructor cc : c.getDeclaredConstructors()) {
-//                System.out.println("Instrumenting constructor: " + cc.getName());
                 if (!cc.isEmpty()) {
-                    cc.instrument(this);
+                    cc.instrument(constructorCallEditor);
                 }
             }
         } catch (Throwable t) {
             // should not happen
             throw new RuntimeException(t);
-        }
-    }
-
-    @Override
-    public void edit(MethodCall m) throws CannotCompileException {
-        m.replace(String.format("{ $_ = ($r) ist.meic.pa.Debugger.getInstance().proxyMethod($class, $0, \"%s\", $sig, $args, $type); }", m.getMethodName()));
-    }
-
-    @Override
-    public void edit(NewExpr e) throws CannotCompileException {
-        try {
-            e.replace(String.format("{ $_ = ($r) ist.meic.pa.Debugger.getInstance().proxyConstructor(\"%s\", $sig, $args, $type); }", e.getConstructor().getName()));
-        } catch (NotFoundException nfe) {
-            throw new RuntimeException(nfe);
         }
     }
 
@@ -61,9 +45,7 @@ public class ClassEditor extends ExprEditor implements Translator {
     public void onLoad(ClassPool classPool, String className) throws NotFoundException, CannotCompileException {
         if (!className.startsWith("ist.meic.pa") && !className.startsWith("javassist")) {
             CtClass c = classPool.get(className);
-//            System.out.println("Instrumenting class: " + className);
             instrumentMethods(c);
-//            System.out.println("I've instrumented class: " + className);
         }
     }
 }

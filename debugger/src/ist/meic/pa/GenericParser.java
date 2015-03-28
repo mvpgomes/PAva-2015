@@ -5,8 +5,10 @@ import ist.meic.pa.parser.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * This class is used to convert any string to a primitive type.
+ */
 public class GenericParser {
-
     private static Map<Class, Parser> parameterParser = new HashMap<Class, Parser>() {{
         put(byte.class, new ByteParser());
         put(short.class, new ShortParser());

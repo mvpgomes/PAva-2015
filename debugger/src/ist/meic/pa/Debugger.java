@@ -12,6 +12,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
+/**
+ * This class provides a REPL when an exception occurs. It provides introspection capabilities that allow the developer
+ * to better understand the state of the application when the exception occured. It also provides intercession capabilities
+ * that allow the developer to change the state and test new hypothesis.
+ */
 public class Debugger {
     private static final Map<String, Command> commands = new HashMap<String, Command>() {{
         put("Abort", new AbortCommand());
@@ -46,6 +51,10 @@ public class Debugger {
                 proxyConstructor(methodName, methodArgsSig, methodArgs, resultSig);
     }
 
+    /**
+     * This method just saves the information about the method call and then executes it. If an exception occurs, the
+     * REPL is invoked.
+     */
     @SuppressWarnings("unchecked")
     public Object proxyMethod(Class instanceClass, Object instance, String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
         final MethodCallEntry e = new MethodCallEntry(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig);
@@ -66,6 +75,10 @@ public class Debugger {
         }
     }
 
+    /**
+     * This method just saves the information about the constructor call and then executes it. If an exception occurs,
+     * the REPL is invoked.
+     */
     @SuppressWarnings("unchecked")
     public Object proxyConstructor(String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
         final MethodCallEntry e = new MethodCallEntry(null, null, methodName, methodArgsSig, methodArgs, resultSig);
@@ -89,7 +102,7 @@ public class Debugger {
     /**
      * Called when an exception in the debugged code occurs.
      *
-     * @return may return values, depending on the debugger command used.
+     * @return may return values, depending on the command used.
      */
     private Object repl(Throwable t) throws Throwable {
         Tuple<Boolean, Object> result;
