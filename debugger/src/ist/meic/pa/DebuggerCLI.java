@@ -20,7 +20,8 @@ public class DebuggerCLI {
         final String dAppName = args[0];
         final String[] dAppArgs = Arrays.copyOfRange(args, 1, args.length);
 
-        // The order of the editors must be preserved.
+        // The order of the editors must be preserved because the constructor editor instruments the constructor call with
+        // a method call that can be later instrumented by the method editor.
         ClassEditor t = new ClassEditor(Arrays.asList(new MethodCallEditor(), new ConstructorCallEditor()));
         ClassPool cp = ClassPool.getDefault();
         Loader cl = new Loader();
