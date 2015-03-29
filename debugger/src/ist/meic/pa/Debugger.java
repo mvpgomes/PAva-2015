@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,9 +47,9 @@ public class Debugger {
     }
 
     public Object callProxyMethod(Class instanceClass, Object instance, String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
-        return (instanceClass != null || instance != null) ?
-                proxyMethod(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig) :
-                proxyConstructor(methodName, methodArgsSig, methodArgs, resultSig);
+        return  instanceClass.getSimpleName().equals(methodName) ?
+                proxyConstructor(methodName, methodArgsSig, methodArgs, resultSig) :
+                proxyMethod(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig);
     }
 
     /**
@@ -57,11 +58,16 @@ public class Debugger {
      */
     @SuppressWarnings("unchecked")
     public Object proxyMethod(Class instanceClass, Object instance, String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
-        final MethodCallEntry e = new MethodCallEntry(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig);
-        callStack.push(e);
         try {
             Method m = instanceClass.getDeclaredMethod(methodName, methodArgsSig);
             m.setAccessible(true);
+
+            if (unsafeMethodCall(m, instance, methodArgs)) {
+                throw new NullPointerException();
+            }
+
+            final MethodCallEntry e = new MethodCallEntry(instanceClass, instance, methodName, methodArgsSig, methodArgs, resultSig);
+            callStack.push(e);
             Object res = m.invoke(instance, methodArgs);
             callStack.pop();
             return res;
@@ -82,11 +88,12 @@ public class Debugger {
      */
     @SuppressWarnings("unchecked")
     public Object proxyConstructor(String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
-        final MethodCallEntry e = new MethodCallEntry(resultSig, null, methodName, methodArgsSig, methodArgs, resultSig);
-        callStack.push(e);
         try {
             Constructor c = resultSig.getDeclaredConstructor(methodArgsSig);
             c.setAccessible(true);
+
+            final MethodCallEntry e = new MethodCallEntry(resultSig, null, methodName, methodArgsSig, methodArgs, resultSig);
+            callStack.push(e);
             Object res =  c.newInstance(methodArgs);
             callStack.pop();
             return res;
@@ -99,6 +106,10 @@ public class Debugger {
             System.out.println(t.getTargetException().toString());
             return repl(t.getTargetException());
         }
+    }
+
+    private static boolean unsafeMethodCall(Method m, Object instance, Object[] args) {
+        return !Modifier.isStatic(m.getModifiers()) && instance == null;
     }
 
     /**

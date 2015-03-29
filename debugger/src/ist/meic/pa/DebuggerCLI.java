@@ -3,11 +3,8 @@ package ist.meic.pa;
 import ist.meic.pa.editor.ConstructorCallEditor;
 import ist.meic.pa.editor.MethodCallEditor;
 import javassist.*;
-import javassist.compiler.ast.Expr;
-import javassist.expr.ExprEditor;
 
 import java.util.Arrays;
-import java.util.LinkedList;
 
 public class DebuggerCLI {
     public static void main(String[] args) throws Throwable {

@@ -5,7 +5,6 @@ import ist.meic.pa.GenericParser;
 import ist.meic.pa.MethodCallEntry;
 import ist.meic.pa.Tuple;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Stack;
 
 /**

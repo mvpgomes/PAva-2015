@@ -15,12 +15,15 @@ import java.util.Stack;
 public class SetCommand implements Command {
     @Override
     public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) {
+        final MethodCallEntry entry = stack.peek();
         try {
-            final Object instance = stack.peek().getInstance();
-            Field field = instance.getClass().getDeclaredField(args[0]);
+            final Class instanceClass = entry.getInstanceClass();
+            Field field = instanceClass.getDeclaredField(args[0]);
             field.setAccessible(true);
 
             Object parsedValue = GenericParser.parse(field.getType(), args[1]);
+
+            final Object instance = entry.getInstance();
             field.set(instance, parsedValue);
 
             return new Tuple<>(Boolean.FALSE, null);

@@ -13,12 +13,14 @@ import java.util.Stack;
 public class GetCommand implements Command {
     @Override
     public Tuple<Boolean, Object> execute(Stack<MethodCallEntry> stack, String[] args, Throwable t) {
-        Object instance = stack.peek().getInstance();
+        final MethodCallEntry entry = stack.peek();
         try {
-            Field field = instance.getClass().getDeclaredField(args[0]);
+            Class instanceClass = entry.getInstanceClass();
+            Field field = instanceClass.getDeclaredField(args[0]);
             field.setAccessible(true);
 
             // Print instance.field
+            Object instance = entry.getInstance();
             System.out.println(field.get(instance));
 
             return new Tuple<>(Boolean.FALSE, null);
