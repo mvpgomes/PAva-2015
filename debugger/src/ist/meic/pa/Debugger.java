@@ -19,6 +19,7 @@ import java.util.Stack;
  * that allow the developer to change the state and test new hypothesis.
  */
 public class Debugger {
+
     private static final Map<String, Command> commands = new HashMap<String, Command>() {{
         put("Abort", new AbortCommand());
         put("Info", new InfoCommand());
@@ -31,6 +32,8 @@ public class Debugger {
 
     private static Debugger instance;
 
+    private static ExtendedDebuggerCLI extendedDebuggerCLI;
+
     private BufferedReader in;
     private Stack<MethodCallEntry> callStack;
 
@@ -42,8 +45,13 @@ public class Debugger {
     public static Debugger getInstance() {
         if (instance == null) {
             instance = new Debugger();
+            extendedDebuggerCLI = new ExtendedDebuggerCLI();
         }
         return instance;
+    }
+
+    public void addCommand(String commandName, Command command) {
+        commands.put(commandName, command);
     }
 
     public Object callProxyMethod(Class instanceClass, Object instance, String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
