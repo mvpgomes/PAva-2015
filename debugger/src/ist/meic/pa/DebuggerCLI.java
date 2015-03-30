@@ -1,10 +1,11 @@
 package ist.meic.pa;
 
-import ist.meic.pa.editor.ConstructorCallEditor;
 import ist.meic.pa.editor.MethodCallEditor;
 import javassist.*;
+import javassist.expr.ExprEditor;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 
 public class DebuggerCLI {
     public static void main(String[] args) throws Throwable {
@@ -17,9 +18,7 @@ public class DebuggerCLI {
         final String dAppName = args[0];
         final String[] dAppArgs = Arrays.copyOfRange(args, 1, args.length);
 
-        // The order of the editors must be preserved because the constructor editor instruments the constructor call with
-        // a method call that can be later instrumented by the method editor.
-        ClassEditor t = new ClassEditor(Arrays.asList(new MethodCallEditor(), new ConstructorCallEditor()));
+        ClassEditor t = new ClassEditor(new LinkedList<ExprEditor>() {{ add(new MethodCallEditor()); }});
         ClassPool cp = ClassPool.getDefault();
         Loader cl = new Loader();
         cl.addTranslator(cp, t);

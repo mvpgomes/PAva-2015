@@ -28,11 +28,10 @@ public class Debugger {
         put("Get", new GetCommand());
         put("Set", new SetCommand());
         put("Retry", new RetryCommand());
+        put("RetryArgs", new RetryArgsCommand());
     }};
 
     private static Debugger instance;
-
-    private static ExtendedDebuggerCLI extendedDebuggerCLI;
 
     private BufferedReader in;
     private Stack<MethodCallEntry> callStack;
@@ -45,7 +44,6 @@ public class Debugger {
     public static Debugger getInstance() {
         if (instance == null) {
             instance = new Debugger();
-            extendedDebuggerCLI = new ExtendedDebuggerCLI();
         }
         return instance;
     }
