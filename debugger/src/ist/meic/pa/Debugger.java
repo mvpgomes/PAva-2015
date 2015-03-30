@@ -48,10 +48,6 @@ public class Debugger {
         return instance;
     }
 
-    public void addCommand(String commandName, Command command) {
-        commands.put(commandName, command);
-    }
-
     public Object callProxyMethod(Class instanceClass, Object instance, String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
         return  instanceClass.getSimpleName().equals(methodName) ?
                 proxyConstructor(methodName, methodArgsSig, methodArgs, resultSig) :
