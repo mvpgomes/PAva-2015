@@ -28,11 +28,10 @@ public class Debugger {
         put("Get", new GetCommand());
         put("Set", new SetCommand());
         put("Retry", new RetryCommand());
+        put("RetryArgs", new RetryArgsCommand());
     }};
 
     private static Debugger instance;
-
-    private static ExtendedDebuggerCLI extendedDebuggerCLI;
 
     private BufferedReader in;
     private Stack<MethodCallEntry> callStack;
@@ -45,13 +44,8 @@ public class Debugger {
     public static Debugger getInstance() {
         if (instance == null) {
             instance = new Debugger();
-            extendedDebuggerCLI = new ExtendedDebuggerCLI();
         }
         return instance;
-    }
-
-    public void addCommand(String commandName, Command command) {
-        commands.put(commandName, command);
     }
 
     public Object callProxyMethod(Class instanceClass, Object instance, String methodName, Class[] methodArgsSig, Object[] methodArgs, Class resultSig) throws Throwable {
