@@ -65,8 +65,12 @@
 " - .not : tensor -> tensor : receives a tensor and returns a new tensor where the function not is applied element-wise."
 (defmethod .not (tensor) (map-tensor #'(lambda (x) (if (> x 0) 0 1)) tensor))
 
-" ---------------------------- Dyatic Functions ----------------------------- "
+" - shape : tensor -> tensor : receives a tensor and return a new tensor that contains the length of each dimension of the
+  tensor."
+(defmethod .shape (tensor) (map-tensor #'array-dimensions tensor))
+
+" ---------------------------- Dyadic Functions ----------------------------- "
 
 " - .- : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the subtraction between the
-  elements of the tensor."
+  elements of the tensors."
 (defmethod .- (tensor1 tensor2) (map-tensor #'- tensor1 tensor2))
