@@ -45,3 +45,6 @@
 
 " - .sin : tensor -> tensor : receives a tensor and returns a new tensor where the function sin is applied element-wise. "
 (defmethod .sin (tensor) (map-tensor #'sin tensor))
+
+" - .not : tensor -> tensor : receives a tensor and returns a new tensor where the function not is applied element-wise."
+(defmethod .not (tensor) (map-tensor #'(lambda (x) (if (> x 0) 0 1)) tensor))
