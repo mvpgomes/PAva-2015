@@ -3,10 +3,11 @@
            :reader tensor-content
            :initarg :initial-content)))
 
-(defun map-tensor (f tensor)
-    (let* ((content (tensor-content tensor))
+(defun map-tensor (f left-tensor &rest right-tensor)
+    (let* ((content (tensor-content left-tensor))
+          (additional-content (tensor-content (first right-tensor)))
           (new-array (make-array (array-dimensions content))))
-        (map-array f content)))
+        (map-array f content additional-content)))
 
 (defun map-array (function &rest arrays)
   "maps the function over the arrays.
@@ -48,3 +49,9 @@
 
 " - .not : tensor -> tensor : receives a tensor and returns a new tensor where the function not is applied element-wise."
 (defmethod .not (tensor) (map-tensor #'(lambda (x) (if (> x 0) 0 1)) tensor))
+
+" ---------------------------- Dyatic Functions ----------------------------- "
+
+" - .- : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the subtraction between the
+  elements of the tensor."
+(defmethod .- (tensor1 tensor2) (map-tensor #'- tensor1 tensor2))
