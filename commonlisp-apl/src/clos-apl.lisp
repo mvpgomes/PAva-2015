@@ -1,3 +1,20 @@
+;;; Utility functions
+(defun compose (fn1 fn2)
+    "Composes two functions. It only works for the case where the arguments
+     passed to the resulting function belong to the second function."
+    (lambda (&rest args)
+        (funcall fn1 (apply fn2 args))))
+
+(defun bool-to-int (bool)
+    "Returns a number depending on the argument.
+     If the argument is true, it returns 1.
+     If the argument is false, it returns 0."
+    (if bool
+        1
+        0))
+
+;;; Project implementation
+
 (defclass tensor ()
     ((data :type array
            :reader tensor-content
@@ -15,8 +32,8 @@
 
 (defun map-array (function &rest arrays)
     "Maps the function over the arrays.
-    Assumes that all arrays are of the same dimensions.
-    Returns a new result array of the same dimension."
+     Assumes that all arrays are of the same dimensions.
+     Returns a new result array of the same dimension."
     (flet ((make-displaced-array (array)
            (make-array (reduce #'* (array-dimensions array)) :displaced-to array)))
         (let* ((displaced-arrays (mapcar #'make-displaced-array arrays))
@@ -33,17 +50,18 @@
      first dimension, prints the sub-tensor separated from the next sub-tensor by a
      number of empty lines that is equal to the number of dimensions minus one."
     (labels ((rec (array subscripts)
-        (let ((cur-dim (length subscripts)))
-            (if (eql cur-dim (array-rank array))
-                (format stream "~a " (apply #'aref array subscripts))
-                (dotimes (i (nth cur-dim (array-dimensions array)))
-                    (rec array (append subscripts (list i)))
-                    (dotimes (num (- (array-rank array) cur-dim 1))
-                        (format stream "~%")))))))
+                (let ((cur-dim (length subscripts)))
+                    (if (eql cur-dim (array-rank array))
+                        (format stream "~a " (apply #'aref array subscripts))
+                        (dotimes (i (nth cur-dim (array-dimensions array)))
+                            (rec array (append subscripts (list i)))
+                            (dotimes (num (- (array-rank array) cur-dim 1))
+                                (format stream "~%")))))))
         (rec (tensor-content tensor) '())))
 
 (defun test-print-object ()
-    (make-instance 'tensor :initial-content (make-array '(2 2 2) :initial-contents '(((1 2) (3 4)) ((5 6) (7 8))))))
+    (make-instance 'tensor
+        :initial-content (make-array '(2 2 2) :initial-contents '(((1 2) (3 4)) ((5 6) (7 8))))))
 
 
 " --------------------------- Tensor Constructors ---------------------------- "
@@ -56,41 +74,104 @@
 
 " ---------------------------- Monadic Functions ----------------------------- "
 
+;(defun .- (tensor)
+;    "Creates a new tensor whose elements are the symmetic of the corresponding
+;    elements of the argument tensor."
+;    (map-tensor #'- tensor))
+
+(defun ./ (tensor)
+    "Creates a new tensor whose elements are the inverse of the corresponding
+     elements of the argument tensor."
+    (map-tensor #'/))
+
 " - .! : tensor -> tensor : receives a tensor and returns a new tensor where the function factorial is applied element-wise."
-(defmethod .! (tensor) (map-tensor #'! tensor))
+(defun .! (tensor) (map-tensor #'! tensor))
 
 " - .sin : tensor -> tensor : receives a tensor and returns a new tensor where the function sin is applied element-wise. "
-(defmethod .sin (tensor) (map-tensor #'sin tensor))
+(defun .sin (tensor) (map-tensor #'sin tensor))
+
+(defun .cos (tensor)
+    "Creates a new tensor whose elements are the result of applying the cos
+     function to the corresponding elements of the argument tensor."
+    (map-tensor #'cos tensor))
 
 " - .not : tensor -> tensor : receives a tensor and returns a new tensor where the function not is applied element-wise."
-(defmethod .not (tensor) (map-tensor #'(lambda (x) (if (> x 0) 0 1)) tensor))
+(defun .not (tensor) (map-tensor #'(lambda (x) (if (> x 0) 0 1)) tensor))
 
 " - shape : tensor -> tensor : receives a tensor and return a new tensor that contains the length of each dimension of the
   tensor."
-(defmethod .shape (tensor) (map-tensor #'array-dimensions tensor))
+(defun .shape (tensor) (map-tensor #'array-dimensions tensor))
+
+(defun interval (n)
+    "Creates a vector containing an enumeration of all integers starting
+     from 1 up to the argument."
+    (labels ((rec (i n)
+                (if (> i n)
+                    '()
+                    (cons i (rec (1+ i) n)))))
+        (v (rec 1 n))))
 
 " ---------------------------- Dyadic Functions ----------------------------- "
 
+(defun .+ (tensor1 tensor2)
+    "Creates a tensor with the sum of the corresponding elements of the argument
+     tensors."
+    (map-tensor #'+ tensor1 tensor2))
+
 " - .- : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the subtraction between the
   elements of the tensors."
-(defmethod .- (tensor1 tensor2) (map-tensor #'- tensor1 tensor2))
+(defun .- (tensor1 tensor2) (map-tensor #'- tensor1 tensor2))
 
 " - ./ : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the division between the
   elements of the tensors."
-(defmethod ./ (tensor1 tensor2) (map-tensor #'/ tensor1 tensor2))
+(defun ./ (tensor1 tensor2) (map-tensor #'/ tensor1 tensor2))
 
 " - .% : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the remainder between the
   elements of the tensors."
-(defmethod .% (tensor1 tensor2) (map-tensor #'% tensor1 tensor2))
+(defun .% (tensor1 tensor2) (map-tensor #'% tensor1 tensor2))
 
 " - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the result of the comparsion
   (greater then) between the elements of the tensors."
-(defmethod .> (tensor1 tensor2) (map-tensor #'> tensor1 tensor2))
+(defun .> (tensor1 tensor2) (map-tensor #'> tensor1 tensor2))
 
 " - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the result of the comparsion
   (greater equals then) between the elements of the tensors."
-(defmethod .>= (tensor1 tensor2) (map-tensor #'>= tensor1 tensor2))
+(defun .>= (tensor1 tensor2) (map-tensor #'>= tensor1 tensor2))
 
 " - .or : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the result of the logical
 comparsion (or) between the elements of the tensors."
-(defmethod .or (tensor1 tensor2) (map-tensor #'or tensor1 tensor2))
+(defun .or (tensor1 tensor2) (map-tensor #'or tensor1 tensor2))
+
+(defun .* (tensor1 tensor2)
+    "Creates a tensor with the multiplication of the corresponding elements of
+     the argument tensors."
+    (map-tensor #'* tensor1 tensor2))
+
+(defun .// (tensor1 tensor2)
+    "Creates a tensor with the integer division of the corresponding elements
+     of the argument tensors."
+    (map-tensor (lambda (e1 e2) (truncate (/ e1 e2)))))
+
+(defun .< (tensor1 tensor2)
+    "Creates a tensor using the relation \"less than\" on the corresponding
+     elements of the argument tensors. The result tensor will have, as elements,
+     the integers 0 or 1."
+    (map-tensor (compose #'bool-to-int #'<) tensor1 tensor2))
+
+(defun .<= (tensor1 tensor2)
+    "Creates a tensor using the relation \"less or equal than\" on the corresponding
+     elements of the argument tensors. The result tensor will have, as elements,
+     the integers 0 or 1."
+    (map-tensor (compose #'bool-to-int #'<=) tensor1 tensor2))
+
+(defun .= (tensor1 tensor2)
+    "Creates a tensor using the relation \"less or equal than\" on the corresponding
+     elements of the argument tensors. The result tensor will have, as elements,
+     the integers 0 or 1."
+    (map-tensor (compose #'bool-to-int #'=) tensor1 tensor2))
+
+(defun .and (tensor1 tensor2)
+    "Creates a tensor using the relation \"less or equal than\" on the corresponding
+     elements of the argument tensors. The result tensor will have, as elements,
+     the integers 0 or 1."
+    (map-tensor (compose #'bool-to-int (lambda (e1 e2) (and e1 e2))) tensor1 tensor2))
