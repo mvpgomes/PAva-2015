@@ -82,3 +82,7 @@
 " - .% : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the remainder between the
   elements of the tensors."
 (defmethod .% (tensor1 tensor2) (map-tensor #'% tensor1 tensor2))
+
+" - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the result of the comparsion
+  (greater then) between the elements of the tensors."
+(defmethod .> (tensor1 tensor2) (map-tensor #'> tensor1 tensor2))
