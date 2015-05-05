@@ -90,3 +90,7 @@
 " - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the result of the comparsion
   (greater equals then) between the elements of the tensors."
 (defmethod .>= (tensor1 tensor2) (map-tensor #'>= tensor1 tensor2))
+
+" - .or : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the result of the logical
+comparsion (or) between the elements of the tensors."
+(defmethod .or (tensor1 tensor2) (map-tensor #'or tensor1 tensor2))
