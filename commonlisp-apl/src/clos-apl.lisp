@@ -6,7 +6,7 @@
 (defun map-tensor (f tensor)
     (let* ((content (tensor-content tensor))
           (new-array (make-array (array-dimensions content))))
-        (array-map f content)))
+        (map-array f content)))
 
 (defun map-array (function &rest arrays)
   "maps the function over the arrays.
@@ -37,3 +37,8 @@
 
 " - v : element -> tensor : receives a parameter list and returns a vector."
 (defmethod v (&rest elements) (make-instance 'tensor :initial-content (make-array (length elements) :initial-contents elements)))
+
+" ---------------------------- Monadic Functions ----------------------------- "
+
+" - .! : tensor -> tensor : receives a tensor and returns a new tensor where the function factorial is applied element-wise."
+(defmethod .! (tensor) (map-tensor #'! tensor))
