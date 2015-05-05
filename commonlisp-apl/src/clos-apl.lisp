@@ -28,3 +28,9 @@
             (setf (apply #'aref new-array subscripts)(funcall f (apply #'aref array subscripts)))
             (dotimes (i (nth cur-dim (array-dimensions array)))
                 (map-array f array new-array (append subscripts (list i)))))))
+
+
+" --------------------------- Tensor Constructors ---------------------------- "
+
+" - s : element -> tensor : receives an element and returns a scalar."
+(defmethod s (element) (make-instance 'tensor :initial-content (make-array '(1) :initial-contents (list element))))
