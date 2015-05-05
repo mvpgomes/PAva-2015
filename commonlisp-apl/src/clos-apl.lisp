@@ -32,5 +32,8 @@
 
 " --------------------------- Tensor Constructors ---------------------------- "
 
-" - s : element -> tensor : receives an element and returns a scalar."
+" - s : element -> tensor : receives a parameter and returns a scalar."
 (defmethod s (element) (make-instance 'tensor :initial-content (make-array '(1) :initial-contents (list element))))
+
+" - v : element -> tensor : receives a parameter list and returns a vector."
+(defmethod v (&rest elements) (make-instance 'tensor :initial-content (make-array (length elements) :initial-contents elements)))
