@@ -42,3 +42,6 @@
 
 " - .! : tensor -> tensor : receives a tensor and returns a new tensor where the function factorial is applied element-wise."
 (defmethod .! (tensor) (map-tensor #'! tensor))
+
+" - .sin : tensor -> tensor : receives a tensor and returns a new tensor where the function sin is applied element-wise. "
+(defmethod .sin (tensor) (map-tensor #'sin tensor))
