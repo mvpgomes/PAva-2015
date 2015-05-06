@@ -49,13 +49,14 @@
      first dimension, prints the sub-tensor separated from the next sub-tensor by a
      number of empty lines that is equal to the number of dimensions minus one."
     (labels ((rec (array subscripts)
-                (let ((cur-dim (length subscripts)))
+                (let* ((cur-dim (length subscripts))
+                      (last-iter (eql (- (nth cur-dim subscripts) 1) (nth cur-dim (array-dimensions array)))))
                     (if (eql cur-dim (array-rank array))
-                        (format stream "~a " (apply #'aref array subscripts))
-                        (dotimes (i (nth cur-dim (array-dimensions array)))
-                            (rec array (append subscripts (list i)))
-                            (dotimes (num (- (array-rank array) cur-dim 1))
-                                (format stream "~%")))))))
+                        (format stream "~d " (apply #'aref array subscripts))
+                        (progn
+                            (dotimes (i (nth cur-dim (array-dimensions array)))
+                                (rec array (append subscripts (list i))))
+                            (unless last-iter (format stream "~%")))))))
         (rec (tensor-content tensor) '())))
 
 (defun test-print-object ()
@@ -73,19 +74,29 @@
 
 " ---------------------------- Generic Functions ----------------------------- "
 (defgeneric .- (tensor &optional tensor2))
+(defgeneric symmetric (tensor))
+(defgeneric subtract (tensor1 tensor2))
 (defgeneric ./ (tensor &optional tensor2))
 (defgeneric .! (tensor))
 (defgeneric .sin (tensor))
 (defgeneric .cos (tensor))
 (defgeneric .not (tensor))
-(defgeneric .shape (tensor))
+(defgeneric shape (tensor))
 
 " ---------------------------- Monadic Functions ----------------------------- "
 
-(defmethod .- ((tensor tensor) &optional (tensor2 tensor))
+(defmethod .- (tensor &optional tensor2)
     "Creates a new tensor whose elements are the symmetic of the corresponding
      elements of the argument tensor."
-    (map-tensor #'- tensor tensor2))
+     (if tensor2
+         (subtract tensor tensor2)
+         (symmetric tensor)))
+
+(defmethod symmetric ((tensor tensor))
+    (map-tensor #'- tensor))
+
+(defmethod substract ((tensor1 tensor) (tensor2 tensor))
+    (map-tensor #'- tensor1 tensor2))
 
 (defmethod ./ ((tensor tensor) &optional (tensor2 tensor))
     "Creates a new tensor whose elements are the inverse of the corresponding
@@ -112,7 +123,7 @@
      where the function not is applied element-wise."
     (map-tensor #'(lambda (x) (if (> x 0) 0 1)) tensor))
 
-(defmethod .shape ((tensor tensor))
+(defmethod shape ((tensor tensor))
     " - shape : tensor -> tensor : receives a tensor and return a new tensor
      that contains the length of each dimension of the tensor."
     (v (array-dimensions (tensor-content tensor))))
