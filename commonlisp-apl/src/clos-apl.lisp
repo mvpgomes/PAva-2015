@@ -82,31 +82,31 @@
 
 (defgeneric .shape (tensor))
 
-(defgeneric .- (tensor &optional tensor2))
+(defgeneric .- (tensor tensor2))
 
-(defgeneric ./ (tensor &optional tensor2))
+(defgeneric ./ (tensor tensor2))
 
-(defgeneric .+ (tensor &optional tensor2))
+(defgeneric .+ (tensor tensor2))
 
-(defgeneric .% (tensor &optional tensor2))
+(defgeneric .% (tensor tensor2))
 
-(defgeneric .> (tensor &optional tensor2))
+(defgeneric .> (tensor tensor2))
 
-(defgeneric .>= (tensor &optional tensor2))
+(defgeneric .>= (tensor tensor2))
 
-(defgeneric .or (tensor &optional tensor2))
+(defgeneric .or (tensor tensor2))
 
-(defgeneric .* (tensor &optional tensor2))
+(defgeneric .* (tensor tensor2))
 
-(defgeneric .// (tensor &optional tensor2))
+(defgeneric .// (tensor tensor2))
 
-(defgeneric .< (tensor &optional tensor2))
+(defgeneric .< (tensor tensor2))
 
-(defgeneric .<= (tensor &optional tensor2))
+(defgeneric .<= (tensor tensor2))
 
-(defgeneric .= (tensor &optional tensor2))
+(defgeneric .= (tensor tensor2))
 
-(defgeneric .and (tensor &optional tensor2))
+(defgeneric .and (tensor tensor2))
 
 " ---------------------------- Monadic Functions ----------------------------- "
 
@@ -156,60 +156,60 @@
 
 " ---------------------------- Dyadic Functions ----------------------------- "
 
-(defmethod .+ ((tensor tensor) &optional (tensor2 tensor))
+(defmethod .+ ((tensor tensor) (tensor2 tensor))
     "Creates a tensor with the sum of the corresponding elements of the argument
      tensors."
     (map-tensor #'+ tensor tensor2))
 
 " - ./ : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
   division between the elements of the tensors."
-(defmethod ./ ((tensor tensor) &optional (tensor tensor2)) (map-tensor #'/ tensor tensor2))
+(defmethod ./ ((tensor tensor) (tensor tensor2)) (map-tensor #'/ tensor tensor2))
 
 " - .% : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
   remainder between the elements of the tensors."
-(defmethod .% ((tensor tensor) &optional (tensor tensor2)) (map-tensor #'% tensor tensor2))
+(defmethod .% ((tensor tensor) (tensor tensor2)) (map-tensor #'% tensor tensor2))
 
 " - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
   result of the comparsion (greater then) between the elements of the tensors."
-(defmethod .> ((tensor tensor) &optional (tensor tensor2)) (map-tensor #'> tensor tensor2))
+(defmethod .> ((tensor tensor) (tensor tensor2)) (map-tensor #'> tensor tensor2))
 
 " - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
   result of the comparsion (greater equals then) between the elements of the tensors."
-(defmethod .>= ((tensor tensor) &optional (tensor tensor2)) (map-tensor #'>= tensor tensor2))
+(defmethod .>= ((tensor tensor) (tensor tensor2)) (map-tensor #'>= tensor tensor2))
 
 " - .or : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
 result of the logical comparsion (or) between the elements of the tensors."
-(defun .or ((tensor tensor) &optional (tensor tensor2)) (map-tensor #'or tensor tensor2))
+(defun .or ((tensor tensor) (tensor tensor2)) (map-tensor #'or tensor tensor2))
 
-(defmethod .* ((tensor tensor) &optional (tensor tensor2))
+(defmethod .* ((tensor tensor) (tensor tensor2))
     "Creates a tensor with the multiplication of the corresponding elements of
      the argument tensors."
     (map-tensor #'* tensor tensor2))
 
-(defmethod .// ((tensor tensor) &optional (tensor tensor2))
+(defmethod .// ((tensor tensor) (tensor tensor2))
     "Creates a tensor with the integer division of the corresponding elements
      of the argument tensors."
     (map-tensor (lambda (e1 e2) (truncate (/ e1 e2))) tensor tensor2))
 
-(defmethod .< ((tensor tensor) &optional (tensor tensor2))
+(defmethod .< ((tensor tensor) (tensor tensor2))
     "Creates a tensor using the relation \"less than\" on the corresponding
      elements of the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
     (map-tensor (compose #'bool-to-int #'<) tensor tensor2))
 
-(defmethod .<= ((tensor tensor) &optional (tensor tensor2))
+(defmethod .<= ((tensor tensor) (tensor tensor2))
     "Creates a tensor using the relation \"less or equal than\" on the corresponding
      elements of the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
     (map-tensor (compose #'bool-to-int #'<=) tensor tensor2))
 
-(defmethod .= ((tensor tensor) &optional (tensor tensor2))
+(defmethod .= ((tensor tensor) (tensor tensor2))
     "Creates a tensor using the relation \"less or equal than\" on the corresponding
      elements of the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
     (map-tensor (compose #'bool-to-int #'=) tensor tensor2))
 
-(defmethod .and ((tensor tensor) &optional (tensor tensor2))
+(defmethod .and ((tensor tensor) (tensor tensor2))
     "Creates a tensor using the relation \"less or equal than\" on the corresponding
      elements of the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
