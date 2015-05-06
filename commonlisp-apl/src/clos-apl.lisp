@@ -5,7 +5,7 @@
     (lambda (&rest args)
         (funcall fn1 (apply fn2 args))))
 
-(defun bool-to-int (bool)
+(defun bool->int (bool)
     "Returns a number depending on the argument.
      If the argument is true, it returns 1.
      If the argument is false, it returns 0."
@@ -41,6 +41,12 @@
             (apply #'map-into displaced-result-array function displaced-arrays)
             result-array)))
 
+(defun last-iteration-dimension (array-dimensions array-subscripts)
+    (if (null array-subscripts)
+        t
+        (and (eql (car array-subscripts) (- (car array-dimensions) 1))
+             (last-iteration-dimension (cdr array-dimensions) (cdr array-subscripts)))))
+
 (defmethod print-object ((tensor tensor) (stream stream))
     "Implementation of the generic method print-object for the tensor data structure.
      If the tensor is a scalar, print a single-element.
@@ -50,13 +56,15 @@
      number of empty lines that is equal to the number of dimensions minus one."
     (labels ((rec (array subscripts)
                 (let* ((cur-dim (length subscripts))
-                      (last-iter (eql (- (nth cur-dim subscripts) 1) (nth cur-dim (array-dimensions array)))))
+                       (cur-dim-size (nth cur-dim (array-dimensions array))))
                     (if (eql cur-dim (array-rank array))
-                        (format stream "~d " (apply #'aref array subscripts))
-                        (progn
-                            (dotimes (i (nth cur-dim (array-dimensions array)))
-                                (rec array (append subscripts (list i))))
-                            (unless last-iter (format stream "~%")))))))
+                        (format stream "~A " (apply #'aref array subscripts))
+                        (dotimes (i cur-dim-size)
+                            (let ((cur-subscripts (append subscripts (list i))))
+                                (rec array cur-subscripts)
+                                (unless (or (eql cur-dim (- (array-rank array) 1))
+                                            (last-iteration-dimension (array-dimensions array) cur-subscripts))
+                                    (format stream "~%" cur-dim cur-dim-size))))))))
         (rec (tensor-content tensor) '())))
 
 (defun test-print-object ()
@@ -162,8 +170,7 @@
     "Creates a vector containing an enumeration of all integers starting
      from 1 up to the argument."
     (labels ((rec (i n)
-                (if (> i n)
-                    '()
+                (unless (> i n)
                     (cons i (rec (1+ i) n)))))
         (v (rec 1 n))))
 
@@ -204,22 +211,22 @@ result of the logical comparsion (or) between the elements of the tensors."
     "Creates a tensor using the relation \"less than\" on the corresponding
      elements of the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
-    (map-tensor (compose #'bool-to-int #'<) tensor tensor2))
+    (map-tensor (compose #'bool->int #'<) tensor tensor2))
 
 (defmethod .<= ((tensor tensor) (tensor2 tensor))
     "Creates a tensor using the relation \"less or equal than\" on the corresponding
      elements of the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
-    (map-tensor (compose #'bool-to-int #'<=) tensor tensor2))
+    (map-tensor (compose #'bool->int #'<=) tensor tensor2))
 
 (defmethod .= ((tensor tensor) (tensor2 tensor))
     "Creates a tensor using the relation \"less or equal than\" on the corresponding
      elements of the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
-    (map-tensor (compose #'bool-to-int #'=) tensor tensor2))
+    (map-tensor (compose #'bool->int #'=) tensor tensor2))
 
 (defmethod .and ((tensor tensor) (tensor2 tensor))
     "Creates a tensor using the relation \"less or equal than\" on the corresponding
      elements of the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
-    (map-tensor (compose #'bool-to-int (lambda (e1 e2) (and e1 e2))) tensor tensor2))
+    (map-tensor (compose #'bool->int (lambda (e1 e2) (and e1 e2))) tensor tensor2))
