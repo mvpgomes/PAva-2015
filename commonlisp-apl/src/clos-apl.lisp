@@ -84,10 +84,12 @@
      elements of the argument tensor."
     (map-tensor #'/))
 
-" - .! : tensor -> tensor : receives a tensor and returns a new tensor where the function factorial is applied element-wise."
+" - .! : tensor -> tensor : receives a tensor and returns a new tensor where the function factorial
+  is applied element-wise."
 (defun .! (tensor) (map-tensor #'! tensor))
 
-" - .sin : tensor -> tensor : receives a tensor and returns a new tensor where the function sin is applied element-wise. "
+" - .sin : tensor -> tensor : receives a tensor and returns a new tensor where the function sin is
+ applied element-wise. "
 (defun .sin (tensor) (map-tensor #'sin tensor))
 
 (defun .cos (tensor)
@@ -95,10 +97,12 @@
      function to the corresponding elements of the argument tensor."
     (map-tensor #'cos tensor))
 
-" - .not : tensor -> tensor : receives a tensor and returns a new tensor where the function not is applied element-wise."
+" - .not : tensor -> tensor : receives a tensor and returns a new tensor where the function not is
+  applied element-wise."
 (defun .not (tensor) (map-tensor #'(lambda (x) (if (> x 0) 0 1)) tensor))
 
-" - shape : tensor -> tensor : receives a tensor and return a new tensor that contains the length of each dimension of the
+" - shape : tensor -> tensor : receives a tensor and return a new tensor that contains the length
+  of each dimension of the
   tensor."
 (defun .shape (tensor) (map-tensor #'array-dimensions tensor))
 
@@ -118,28 +122,28 @@
      tensors."
     (map-tensor #'+ tensor1 tensor2))
 
-" - .- : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the subtraction between the
-  elements of the tensors."
+" - .- : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
+  subtraction between the elements of the tensors."
 (defun .- (tensor1 tensor2) (map-tensor #'- tensor1 tensor2))
 
-" - ./ : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the division between the
-  elements of the tensors."
+" - ./ : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
+  division between the elements of the tensors."
 (defun ./ (tensor1 tensor2) (map-tensor #'/ tensor1 tensor2))
 
-" - .% : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the remainder between the
-  elements of the tensors."
+" - .% : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
+  remainder between the elements of the tensors."
 (defun .% (tensor1 tensor2) (map-tensor #'% tensor1 tensor2))
 
-" - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the result of the comparsion
-  (greater then) between the elements of the tensors."
+" - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
+  result of the comparsion (greater then) between the elements of the tensors."
 (defun .> (tensor1 tensor2) (map-tensor #'> tensor1 tensor2))
 
-" - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the result of the comparsion
-  (greater equals then) between the elements of the tensors."
+" - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
+  result of the comparsion (greater equals then) between the elements of the tensors."
 (defun .>= (tensor1 tensor2) (map-tensor #'>= tensor1 tensor2))
 
-" - .or : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the result of the logical
-comparsion (or) between the elements of the tensors."
+" - .or : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
+result of the logical comparsion (or) between the elements of the tensors."
 (defun .or (tensor1 tensor2) (map-tensor #'or tensor1 tensor2))
 
 (defun .* (tensor1 tensor2)
