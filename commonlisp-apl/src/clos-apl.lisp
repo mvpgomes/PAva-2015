@@ -73,7 +73,12 @@
 
 " ---------------------------- Generic Functions ----------------------------- "
 (defgeneric .- (tensor &optional tensor2))
-
+(defgeneric ./ (tensor &optional tensor2))
+(defgeneric .! (tensor))
+(defgeneric .sin (tensor))
+(defgeneric .cos (tensor))
+(defgeneric .not (tensor))
+(defgeneric .shape (tensor))
 
 " ---------------------------- Monadic Functions ----------------------------- "
 
@@ -82,34 +87,35 @@
      elements of the argument tensor."
     (map-tensor #'- tensor tensor2))
 
-(defgeneric ./ (tensor &optional tensor2))
-
 (defmethod ./ ((tensor tensor) &optional (tensor2 tensor))
     "Creates a new tensor whose elements are the inverse of the corresponding
      elements of the argument tensor."
     (map-tensor #'/ tensor tensor2))
 
-" - .! : tensor -> tensor : receives a tensor and returns a new tensor where the function factorial
-  is applied element-wise."
-(defun .! (tensor) (map-tensor #'! tensor))
+(defmethod .! ((tensor tensor))
+    " - .! : tensor -> tensor : receives a tensor and returns a new tensor
+     where the function factorial is applied element-wise."
+    (map-tensor #'! tensor))
 
-" - .sin : tensor -> tensor : receives a tensor and returns a new tensor where the function sin is
- applied element-wise. "
-(defun .sin (tensor) (map-tensor #'sin tensor))
+(defmethod .sin ((tensor tensor))
+    " - .sin : tensor -> tensor : receives a tensor and returns a new tensor
+     where the function sin is applied element-wise. "
+    (map-tensor #'sin tensor))
 
-(defun .cos (tensor)
+(defmethod .cos ((tensor tensor))
     "Creates a new tensor whose elements are the result of applying the cos
      function to the corresponding elements of the argument tensor."
     (map-tensor #'cos tensor))
 
-" - .not : tensor -> tensor : receives a tensor and returns a new tensor where the function not is
-  applied element-wise."
-(defun .not (tensor) (map-tensor #'(lambda (x) (if (> x 0) 0 1)) tensor))
+(defmethod .not ((tensor tensor))
+    " - .not : tensor -> tensor : receives a tensor and returns a new tensor
+     where the function not is applied element-wise."
+    (map-tensor #'(lambda (x) (if (> x 0) 0 1)) tensor))
 
-" - shape : tensor -> tensor : receives a tensor and return a new tensor that contains the length
-  of each dimension of the
-  tensor."
-(defun .shape (tensor) (map-tensor #'array-dimensions tensor))
+(defmethod .shape ((tensor tensor))
+    " - shape : tensor -> tensor : receives a tensor and return a new tensor
+     that contains the length of each dimension of the tensor."
+    (v (array-dimensions (tensor-content tensor))))
 
 (defun interval (n)
     "Creates a vector containing an enumeration of all integers starting
