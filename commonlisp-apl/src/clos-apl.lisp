@@ -71,18 +71,23 @@
 " - v : element -> tensor : receives a parameter list and returns a vector."
 (defun v (&rest elements) (make-instance 'tensor :initial-content (make-array (length elements) :initial-contents elements)))
 
-" ---------------------------- Monadic Functions ----------------------------- "
+" ---------------------------- Generic Functions ----------------------------- "
 (defgeneric .- (tensor &optional tensor2))
+
+
+" ---------------------------- Monadic Functions ----------------------------- "
 
 (defmethod .- ((tensor tensor) &optional (tensor2 tensor))
     "Creates a new tensor whose elements are the symmetic of the corresponding
      elements of the argument tensor."
     (map-tensor #'- tensor tensor2))
 
-(defun ./ (tensor)
+(defgeneric ./ (tensor &optional tensor2))
+
+(defmethod ./ ((tensor tensor) &optional (tensor2 tensor))
     "Creates a new tensor whose elements are the inverse of the corresponding
      elements of the argument tensor."
-    (map-tensor #'/))
+    (map-tensor #'/ tensor tensor2))
 
 " - .! : tensor -> tensor : receives a tensor and returns a new tensor where the function factorial
   is applied element-wise."
