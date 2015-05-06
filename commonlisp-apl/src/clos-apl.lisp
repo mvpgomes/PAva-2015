@@ -14,15 +14,14 @@
         0))
 
 ;;; Project implementation
-
 (defclass tensor ()
     ((data :type array
            :reader tensor-content
            :initarg :initial-content)))
 
+
 (defun scalar? (tensor)
-    (and (eql (array-rank (tensor-content tensor)) 1)
-         (eql (car (array-dimensions (tensor-content tensor))) 1)))
+   (zerop (array-rank (tensor-content tensor))))
 
 (defun map-tensor (f left-tensor &rest right-tensor)
     (let* ((content (tensor-content left-tensor))
@@ -67,17 +66,18 @@
 " --------------------------- Tensor Constructors ---------------------------- "
 
 " - s : element -> tensor : receives a parameter and returns a scalar."
-(defmethod s (element) (make-instance 'tensor :initial-content (make-array '(1) :initial-contents (list element))))
+(defun s (element) (make-instance 'tensor :initial-content (make-array nil :initial-contents element)))
 
 " - v : element -> tensor : receives a parameter list and returns a vector."
-(defmethod v (&rest elements) (make-instance 'tensor :initial-content (make-array (length elements) :initial-contents elements)))
+(defun v (&rest elements) (make-instance 'tensor :initial-content (make-array (length elements) :initial-contents elements)))
 
 " ---------------------------- Monadic Functions ----------------------------- "
+(defgeneric .- (tensor &optional tensor2))
 
-;(defun .- (tensor)
-;    "Creates a new tensor whose elements are the symmetic of the corresponding
-;    elements of the argument tensor."
-;    (map-tensor #'- tensor))
+(defmethod .- ((tensor tensor) &optional (tensor2 tensor))
+    "Creates a new tensor whose elements are the symmetic of the corresponding
+     elements of the argument tensor."
+    (map-tensor #'- tensor tensor2))
 
 (defun ./ (tensor)
     "Creates a new tensor whose elements are the inverse of the corresponding
@@ -121,10 +121,6 @@
     "Creates a tensor with the sum of the corresponding elements of the argument
      tensors."
     (map-tensor #'+ tensor1 tensor2))
-
-" - .- : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
-  subtraction between the elements of the tensors."
-(defun .- (tensor1 tensor2) (map-tensor #'- tensor1 tensor2))
 
 " - ./ : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
   division between the elements of the tensors."
