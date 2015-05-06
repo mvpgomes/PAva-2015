@@ -82,9 +82,9 @@
 
 (defgeneric .shape (tensor))
 
-(defgeneric .- (tensor tensor2))
+(defgeneric .- (tensor &optional tensor2))
 
-(defgeneric ./ (tensor tensor2))
+(defgeneric ./ (tensor &optional tensor2))
 
 (defgeneric .+ (tensor tensor2))
 
@@ -140,7 +140,7 @@
      where the function not is applied element-wise."
     (map-tensor #'(lambda (x) (if (> x 0) 0 1)) tensor))
 
-(defmethod .shape ((tensor tensor))
+(defun shape ((tensor tensor))
     " - shape : tensor -> tensor : receives a tensor and return a new tensor
      that contains the length of each dimension of the tensor."
     (v (array-dimensions (tensor-content tensor))))
@@ -160,10 +160,6 @@
     "Creates a tensor with the sum of the corresponding elements of the argument
      tensors."
     (map-tensor #'+ tensor tensor2))
-
-" - ./ : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
-  division between the elements of the tensors."
-(defmethod ./ ((tensor tensor) (tensor tensor2)) (map-tensor #'/ tensor tensor2))
 
 " - .% : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
   remainder between the elements of the tensors."
