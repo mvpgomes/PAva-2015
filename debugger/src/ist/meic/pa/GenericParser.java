@@ -19,6 +19,12 @@ public class GenericParser {
         put(boolean.class, new ByteParser());
         put(char.class, new CharParser());
         put(String.class, new StringParser());
+        put(void.class, new Parser() {
+            @Override
+            public Object parse(String value) {
+                return null;
+            }
+        });
     }};
 
     public static Object parse(Class returnType, String arg){
