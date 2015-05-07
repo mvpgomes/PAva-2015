@@ -19,6 +19,7 @@
            :reader tensor-content
            :initarg :initial-content)))
 
+(defclass scalar (tensor) ())
 
 (defun scalar? (tensor)
    (zerop (array-rank (tensor-content tensor))))
@@ -75,7 +76,7 @@
 " --------------------------- Tensor Constructors ---------------------------- "
 
 " - s : element -> tensor : receives a parameter and returns a scalar."
-(defun s (element) (make-instance 'tensor :initial-content (make-array nil :initial-contents element)))
+(defun s (element) (make-instance 'scalar :initial-content (make-array nil :initial-contents element)))
 
 " - v : element -> tensor : receives a parameter list and returns a vector."
 (defun v (&rest elements) (make-instance 'tensor :initial-content (make-array (length elements) :initial-contents elements)))
@@ -181,21 +182,55 @@
      tensors."
     (map-tensor #'+ tensor tensor2))
 
-" - .% : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
-  remainder between the elements of the tensors."
-(defmethod .% ((tensor tensor) (tensor2 tensor)) (map-tensor #'% tensor tensor2))
+(defmethod .% ((tensor tensor) (tensor2 tensor))
+    " - .% : tensor, tensor -> tensor : receives two tensors and return a new tensor
+      that contains the remainder between the elements of the tensors."
+    (map-tensor #'% tensor tensor2))
 
-" - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
-  result of the comparsion (greater then) between the elements of the tensors."
-(defmethod .> ((tensor tensor) (tensor2 tensor)) (map-tensor #'> tensor tensor2))
+(defmethod .% ((scalar scalar) (tensor tensor))
+    " - .% : scalar, tensor -> tensor : receives two tensors and return a new tensor that
+      contains the remainder between the scalar and the elements of the tensor."
+    (map-tensor #'% scalar tensor))
 
-" - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
-  result of the comparsion (greater equals then) between the elements of the tensors."
-(defmethod .>= ((tensor tensor) (tensor2 tensor)) (map-tensor #'>= tensor tensor2))
+(defmethod .% ((tensor tensor) (scalar scalar))
+  " - .% : tensor, scalar -> tensor : receives two tensors and return a new tensor that contains the
+    remainder between the elements of the tensor and the scalar."
+    (map-tensor #'% tensor scalar))
 
-" - .or : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
-result of the logical comparsion (or) between the elements of the tensors."
-(defmethod .or ((tensor tensor) (tensor2 tensor)) (map-tensor #'or tensor tensor2))
+(defmethod .> ((tensor tensor) (tensor2 tensor))
+  " - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
+    result of the comparsion (greater then) between the elements of the tensors."
+    (map-tensor #'> tensor tensor2))
+
+(defmethod .> ((scalar scalar) (tensor tensor))
+  " - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
+    result of the comparsion (greater then) between the scalar and the elements of the tensor."
+    (map-tensor #'> scalar tensor))
+
+(defmethod .> ((tensor tensor) (scalar scalar))
+  " - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
+    result of the comparsion (greater then) between the elements of the tensor and the scalar."
+    (map-tensor #'> tensor scalar))
+
+(defmethod .>= ((tensor tensor) (tensor2 tensor))
+  " - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
+    result of the comparsion (greater equals then) between the elements of the tensors."
+    (map-tensor #'>= tensor tensor2))
+
+(defmethod .>= ((scalar scalar) (tensor tensor))
+  " - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
+    result of the comparsion (greater equals then) between the scalar and the elements of the tensor."
+    (map-tensor #'>= scalar tensor))
+
+(defmethod .>= ((tensor tensor) (scalar scalar))
+  " - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
+    result of the comparsion (greater equals then) between the elements of the tensor and the scalar.."
+    (map-tensor #'>= tensor scalar))
+
+(defmethod .or ((tensor tensor) (tensor2 tensor))
+  " - .or : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
+    result of the logical comparsion (or) between the elements of the tensors."
+    (map-tensor #'or tensor tensor2))
 
 (defmethod .* ((tensor tensor) (tensor2 tensor))
     "Creates a tensor with the multiplication of the corresponding elements of
@@ -207,17 +242,51 @@ result of the logical comparsion (or) between the elements of the tensors."
      of the argument tensors."
     (map-tensor (lambda (e1 e2) (truncate (/ e1 e2))) tensor tensor2))
 
+(defmethod .// ((scalar scalar) (tensor tensor))
+    "Creates a tensor with the integer division of the corresponding elements
+     of the scalar and the argument tensor."
+    (map-tensor (lambda (e1 e2) (truncate (/ e1 e2))) scalar tensor))
+
+(defmethod .// ((tensor tensor) (scalar scalar))
+    "Creates a tensor with the integer division of the corresponding elements
+    of the argument tensor and the scalar."
+    (map-tensor (lambda (e1 e2) (truncate (/ e1 e2))) tensor scalar))
+
 (defmethod .< ((tensor tensor) (tensor2 tensor))
     "Creates a tensor using the relation \"less than\" on the corresponding
      elements of the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
     (map-tensor (compose #'bool->int #'<) tensor tensor2))
 
+(defmethod .< ((scalar scalar) (tensor tensor))
+    "Creates a tensor using the relation \"less than\" on the corresponding
+    elements scalar and the argument tensor. The result tensor will have, as elements,
+    the integers 0 or 1."
+    (map-tensor (compose #'bool-to-int #'<) scalar tensor))
+
+(defmethod .< ((tensor tensor) (scalar scalar))
+    "Creates a tensor using the relation \"less than\" on the corresponding
+    elements of the argument tensor and the scalar. The result tensor will have, as
+    elements, the integers 0 or 1."
+    (map-tensor (compose #'bool-to-int #'<) tensor scalar))
+
 (defmethod .<= ((tensor tensor) (tensor2 tensor))
     "Creates a tensor using the relation \"less or equal than\" on the corresponding
      elements of the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
     (map-tensor (compose #'bool->int #'<=) tensor tensor2))
+
+(defmethod .<= ((scalar scalar) (tensor tensor))
+    "Creates a tensor using the relation \"less or equal than\" on the corresponding
+     elements scalar and the argument tensors. The result tensor will have, as elements,
+     the integers 0 or 1."
+    (map-tensor (compose #'bool-to-int #'<=) scalar tensor))
+
+(defmethod .<= ((tensor tensor) (scalar scalar))
+     "Creates a tensor using the relation \"less or equal than\" on the corresponding
+      elements of the argument tensors. The result tensor will have, as elements,
+      the integers 0 or 1."
+      (map-tensor (compose #'bool-to-int #'<=) tensor scalar))
 
 (defmethod .= ((tensor tensor) (tensor2 tensor))
     "Creates a tensor using the relation \"less or equal than\" on the corresponding
