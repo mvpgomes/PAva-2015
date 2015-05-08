@@ -24,6 +24,9 @@
 (defun scalar? (tensor)
    (zerop (array-rank (tensor-content tensor))))
 
+(defun scalar-to-tensor (n dim)
+  (make-instance 'tensor :initial-content (make-array dim :initial-element n)))
+
 (defun map-tensor (f left-tensor &rest right-tensor)
     (let* ((content (tensor-content left-tensor))
           (additional-content (tensor-content (first right-tensor)))
@@ -185,17 +188,21 @@
 (defmethod .% ((tensor tensor) (tensor2 tensor))
     " - .% : tensor, tensor -> tensor : receives two tensors and return a new tensor
       that contains the remainder between the elements of the tensors."
-    (map-tensor #'% tensor tensor2))
+    (map-tensor #'rem tensor tensor2))
 
 (defmethod .% ((scalar scalar) (tensor tensor))
     " - .% : scalar, tensor -> tensor : receives two tensors and return a new tensor that
       contains the remainder between the scalar and the elements of the tensor."
-    (map-tensor #'% scalar tensor))
+    (let* ((dim (array-dimensions (tensor-content tensor)))
+         (scalar-as-tensor (scalar-to-tensor (aref (tensor-content scalar)) dim)))
+    (map-tensor #'rem scalar-as-tensor tensor)))
 
 (defmethod .% ((tensor tensor) (scalar scalar))
   " - .% : tensor, scalar -> tensor : receives two tensors and return a new tensor that contains the
     remainder between the elements of the tensor and the scalar."
-    (map-tensor #'% tensor scalar))
+    (let* ((dim (array-dimensions (tensor-content tensor)))
+         (scalar-as-tensor (scalar-to-tensor (aref (tensor-content scalar)) dim)))
+    (map-tensor #'rem tensor scalar-as-tensor)))
 
 (defmethod .> ((tensor tensor) (tensor2 tensor))
   " - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
@@ -205,12 +212,16 @@
 (defmethod .> ((scalar scalar) (tensor tensor))
   " - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
     result of the comparsion (greater then) between the scalar and the elements of the tensor."
-    (map-tensor #'> scalar tensor))
+    (let* ((dim (array-dimensions (tensor-content tensor)))
+         (scalar-as-tensor (scalar-to-tensor (aref (tensor-content scalar)) dim)))
+    (map-tensor #'> scalar-as-tensor tensor)))
 
 (defmethod .> ((tensor tensor) (scalar scalar))
   " - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
     result of the comparsion (greater then) between the elements of the tensor and the scalar."
-    (map-tensor #'> tensor scalar))
+    (let* ((dim (array-dimensions (tensor-content tensor)))
+         (scalar-as-tensor (scalar-to-tensor (aref (tensor-content scalar)) dim)))
+    (map-tensor #'> tensor scalar-as-tensor)))
 
 (defmethod .>= ((tensor tensor) (tensor2 tensor))
   " - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
@@ -220,12 +231,16 @@
 (defmethod .>= ((scalar scalar) (tensor tensor))
   " - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
     result of the comparsion (greater equals then) between the scalar and the elements of the tensor."
-    (map-tensor #'>= scalar tensor))
+    (let* ((dim (array-dimensions (tensor-content tensor)))
+         (scalar-as-tensor (scalar-to-tensor (aref (tensor-content scalar)) dim)))
+    (map-tensor #'>= scalar-as-tensor tensor)))
 
 (defmethod .>= ((tensor tensor) (scalar scalar))
   " - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
     result of the comparsion (greater equals then) between the elements of the tensor and the scalar.."
-    (map-tensor #'>= tensor scalar))
+    (let* ((dim (array-dimensions (tensor-content tensor)))
+         (scalar-as-tensor (scalar-to-tensor (aref (tensor-content scalar)) dim)))
+    (map-tensor #'>= tensor scalar-as-tensor)))
 
 (defmethod .or ((tensor tensor) (tensor2 tensor))
   " - .or : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
@@ -245,12 +260,16 @@
 (defmethod .// ((scalar scalar) (tensor tensor))
     "Creates a tensor with the integer division of the corresponding elements
      of the scalar and the argument tensor."
-    (map-tensor (lambda (e1 e2) (truncate (/ e1 e2))) scalar tensor))
+     (let* ((dim (array-dimensions (tensor-content tensor)))
+          (scalar-as-tensor (scalar-to-tensor (aref (tensor-content scalar)) dim)))
+    (map-tensor (lambda (e1 e2) (truncate (/ e1 e2))) scalar-as-tensor tensor)))
 
 (defmethod .// ((tensor tensor) (scalar scalar))
     "Creates a tensor with the integer division of the corresponding elements
     of the argument tensor and the scalar."
-    (map-tensor (lambda (e1 e2) (truncate (/ e1 e2))) tensor scalar))
+    (let* ((dim (array-dimensions (tensor-content tensor)))
+         (scalar-as-tensor (scalar-to-tensor (aref (tensor-content scalar)) dim)))
+    (map-tensor (lambda (e1 e2) (truncate (/ e1 e2))) tensor scalar-as-tensor)))
 
 (defmethod .< ((tensor tensor) (tensor2 tensor))
     "Creates a tensor using the relation \"less than\" on the corresponding
@@ -262,13 +281,17 @@
     "Creates a tensor using the relation \"less than\" on the corresponding
     elements scalar and the argument tensor. The result tensor will have, as elements,
     the integers 0 or 1."
-    (map-tensor (compose #'bool-to-int #'<) scalar tensor))
+    (let* ((dim (array-dimensions (tensor-content tensor)))
+         (scalar-as-tensor (scalar-to-tensor (aref (tensor-content scalar)) dim)))
+    (map-tensor (compose #'bool->int #'<) scalar-as-tensor tensor)))
 
 (defmethod .< ((tensor tensor) (scalar scalar))
     "Creates a tensor using the relation \"less than\" on the corresponding
     elements of the argument tensor and the scalar. The result tensor will have, as
     elements, the integers 0 or 1."
-    (map-tensor (compose #'bool-to-int #'<) tensor scalar))
+    (let* ((dim (array-dimensions (tensor-content tensor)))
+         (scalar-as-tensor (scalar-to-tensor (aref (tensor-content scalar)) dim)))
+    (map-tensor (compose #'bool->int #'<) tensor scalar-as-tensor)))
 
 (defmethod .<= ((tensor tensor) (tensor2 tensor))
     "Creates a tensor using the relation \"less or equal than\" on the corresponding
@@ -280,13 +303,17 @@
     "Creates a tensor using the relation \"less or equal than\" on the corresponding
      elements scalar and the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
-    (map-tensor (compose #'bool-to-int #'<=) scalar tensor))
+     (let* ((dim (array-dimensions (tensor-content tensor)))
+          (scalar-as-tensor (scalar-to-tensor (aref (tensor-content scalar)) dim)))
+    (map-tensor (compose #'bool->int #'<=) scalar-as-tensor tensor)))
 
 (defmethod .<= ((tensor tensor) (scalar scalar))
      "Creates a tensor using the relation \"less or equal than\" on the corresponding
       elements of the argument tensors. The result tensor will have, as elements,
       the integers 0 or 1."
-      (map-tensor (compose #'bool-to-int #'<=) tensor scalar))
+      (let* ((dim (array-dimensions (tensor-content tensor)))
+           (scalar-as-tensor (scalar-to-tensor (aref (tensor-content scalar)) dim)))
+      (map-tensor (compose #'bool->int #'<=) tensor scalar-as-tensor)))
 
 (defmethod .= ((tensor tensor) (tensor2 tensor))
     "Creates a tensor using the relation \"less or equal than\" on the corresponding
