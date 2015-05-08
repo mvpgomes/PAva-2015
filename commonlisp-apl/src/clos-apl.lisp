@@ -21,9 +21,6 @@
 
 (defclass scalar (tensor) ())
 
-(defun scalar? (tensor)
-   (zerop (array-rank (tensor-content tensor))))
-
 (defun scalar-to-tensor (scalar dim)
   (let ((n (aref (tensor-content scalar))))
     (make-instance 'tensor :initial-content (make-array dim :initial-element n))))
