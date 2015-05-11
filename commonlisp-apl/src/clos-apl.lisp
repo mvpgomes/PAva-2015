@@ -35,10 +35,13 @@
         (dim (array-dimensions (tensor-content tensor))))
     (make-instance 'tensor :initial-content (make-array dim :initial-element n))))
 
-(defun map-tensor (f left-tensor &rest right-tensor)
+(defun map-tensor-2 (f left-tensor &rest right-tensor)
     (let* ((content (tensor-content left-tensor))
            (additional-content (tensor-content (first right-tensor))))
         (make-instance 'tensor :initial-content (map-array f content additional-content))))
+
+(defun map-tensor (function &rest tensors)
+    (make-instance 'tensor :initial-content (apply #'map-array function (mapcar #'tensor-content tensors))))
 
 (defun map-array (function &rest arrays)
     "Maps the function over the arrays.
@@ -49,6 +52,15 @@
             (setf (row-major-aref result-array i)
                   (apply function (mapcar (lambda (array) (row-major-aref array i)) arrays))))
         result-array))
+
+(defun fold-tensor (function tensor initial-value)
+    (fold-array function (tensor-content tensor) initial-value))
+
+(defun fold-array (function array initial-value)
+    (let ((acc initial-value))
+        (dotimes (i (length-array array))
+            (setf acc (funcall function (row-major-aref array i) acc)))
+        acc))
 
 (defmethod print-object ((scalar scalar) (stream stream))
     "Implementation of the generic method print-object for the scalar data structure.
@@ -303,6 +315,16 @@
      elements of the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
     (map-tensor (compose #'bool->int (lambda (e1 e2) (and e1 e2))) tensor tensor2))
+
+(defmethod member? ((tensor tensor) (elements tensor))
+    (map-tensor (compose #'bool->int
+                         (lambda (tensor-elem)
+                            (fold-tensor (lambda (elem acc)
+                                            (or (eql tensor-elem elem)
+                                                 acc))
+                                         elements
+                                         nil)))
+                tensor))
 
 " ---------------------------- Monadic Operators ----------------------------- "
 
