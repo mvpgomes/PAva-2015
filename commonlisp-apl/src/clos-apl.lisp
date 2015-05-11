@@ -312,7 +312,6 @@
      the integers 0 or 1."
     (map-tensor (compose #'bool->int (lambda (e1 e2) (and e1 e2))) tensor tensor2))
 
-
 (defun reshape (tensor-dimensions tensor-content)
     (let ((counter 0))
         (labels ((rec (dimensions content)
@@ -339,14 +338,18 @@
 
 " ---------------------------- Monadic Operators ----------------------------- "
 
-(defun scan (fn)
-  (lambda (tensor)
-    (reduce-subsets fn (tensor-content tensor) 0 1)))
-
 (defun fold (fn)
     (lambda (tensor)
         (reduce fn (tensor-content tensor))))
 
+(defun scan (fn)
+  (lambda (tensor)
+    (reduce-subsets fn (tensor-content tensor) 0 1)))
+
+" --------------------------- Diadic Operators ------------------------------- "
+
 (defmethod drop ((scalar scalar) (tensor tensor)))
 
 (defmethod drop ((tensor tensor) (tensor2 tensor)))
+
+" ---------------------------- Exercises -------------------------------------- "
