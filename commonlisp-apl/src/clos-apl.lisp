@@ -21,6 +21,11 @@
 
 (defclass scalar (tensor) ())
 
+(defun drop-elements (lst num-elements)
+  (if (= num-elements 0)
+    lst
+  (drop-elements (cdr lst) (- num-elements 1))))
+
 (defun reduce-subsets (fn vector begin end)
   (if (< (length vector) end)
       (v)
@@ -348,7 +353,11 @@
 
 " --------------------------- Diadic Operators ------------------------------- "
 
-(defmethod drop ((scalar scalar) (tensor tensor)))
+(defmethod drop ((scalar scalar) (tensor tensor))
+  (let ((elements-to-remove (car (tensor-content scalar))))
+    (if (> elements-to-remove 0)
+      (v (drop-elements (tensor-content tensor) elements-to-remove))
+    (v (reverse (drop-elements (reverse (tensor-content tensor)) (abs elements-to-remove)))))))
 
 (defmethod drop ((tensor tensor) (tensor2 tensor)))
 
