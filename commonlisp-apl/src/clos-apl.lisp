@@ -13,6 +13,9 @@
         1
         0))
 
+(defun make-displaced-array (array)
+   (make-array (reduce #'* (array-dimensions array)) :displaced-to array))
+
 ;;; Project implementation
 (defclass tensor ()
     ((data :type array
@@ -35,13 +38,11 @@
     "Maps the function over the arrays.
      Assumes that all arrays are of the same dimensions.
      Returns a new result array of the same dimension."
-    (flet ((make-displaced-array (array)
-           (make-array (reduce #'* (array-dimensions array)) :displaced-to array)))
-        (let* ((displaced-arrays (mapcar #'make-displaced-array arrays))
-               (result-array (make-array (array-dimensions (first arrays))))
-               (displaced-result-array (make-displaced-array result-array)))
-            (apply #'map-into displaced-result-array function displaced-arrays)
-            result-array)))
+    (let* ((displaced-arrays (mapcar #'make-displaced-array arrays))
+           (result-array (make-array (array-dimensions (first arrays))))
+           (displaced-result-array (make-displaced-array result-array)))
+        (apply #'map-into displaced-result-array function displaced-arrays)
+        result-array))
 
 (defun last-iteration-dimension (array-dimensions array-subscripts)
     (if (null array-subscripts)
@@ -69,11 +70,6 @@
                                     (format stream "~%" cur-dim cur-dim-size))))))))
         (rec (tensor-content tensor) '())))
 
-(defun test-print-object ()
-    (make-instance 'tensor
-        :initial-content (make-array '(2 2 2) :initial-contents '(((1 2) (3 4)) ((5 6) (7 8))))))
-
-
 " --------------------------- Tensor Constructors ---------------------------- "
 
 " - s : element -> tensor : receives a parameter and returns a scalar."
@@ -83,6 +79,7 @@
 (defun v (&rest elements) (make-instance 'tensor :initial-content (make-array (length elements) :initial-contents elements)))
 
 " ---------------------------- Generic Functions ----------------------------- "
+
 (defgeneric .- (tensor &optional tensor2))
 
 (defgeneric symmetric (tensor))
@@ -243,7 +240,7 @@
 (defmethod .or ((tensor tensor) (tensor2 tensor))
   " - .or : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
     result of the logical comparsion (or) between the elements of the tensors."
-    (map-tensor #'or tensor tensor2))
+    (map-tensor (compose #'bool->int (lambda (e1 e2) (or e1 e2))) tensor tensor2))
 
 (defmethod .* ((tensor tensor) (tensor2 tensor))
     "Creates a tensor with the multiplication of the corresponding elements of
@@ -324,3 +321,11 @@
      elements of the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
     (map-tensor (compose #'bool->int (lambda (e1 e2) (and e1 e2))) tensor tensor2))
+
+(defun reshape (dimensions contents)
+    (let* ((result-array (make-array (map 'list #'identity (tensor-content dimensions))))
+           (numbers (tensor-content contents))
+           (displaced-array (make-displaced-array result-array)))
+        (dotimes (i (length displaced-array))
+            (setf (aref displaced-array i) (aref numbers (rem i (length numbers)))))
+        (make-instance 'tensor :initial-content result-array)))
