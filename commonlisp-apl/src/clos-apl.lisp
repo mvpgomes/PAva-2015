@@ -24,7 +24,7 @@
 (defun reduce-subsets (fn vector begin end)
   (if (< (length vector) end)
       (v)
-   (v (reduce fn vector :start begin :end end) (reduce-n-times fn vector begin (+ end 1)))))
+   (v (reduce fn vector :start begin :end end) (reduce-subsets fn vector begin (+ end 1)))))
 
 (defun scalar-to-tensor (scalar tensor)
   (let* ((n (aref (tensor-content scalar)))
@@ -85,7 +85,7 @@
 " --------------------------- Tensor Constructors ---------------------------- "
 
 " - s : element -> tensor : receives a parameter and returns a scalar."
-(defun s (element) (make-instance 'scalar :initial-content element))
+(defun s (element) (make-instance 'scalar :initial-content (list element)))
 
 " - v : element -> tensor : receives a parameter list and returns a vector."
 (defun v (&rest elements) (make-instance 'tensor :initial-content elements))
@@ -131,6 +131,8 @@
 (defgeneric .= (tensor2 tensor))
 
 (defgeneric .and (tensor2 tensor))
+
+(defgeneric drop (tensor2 tensor))
 
 " ---------------------------- Monadic Functions ----------------------------- "
 
@@ -344,3 +346,7 @@
 (defun fold (fn)
     (lambda (tensor)
         (reduce fn (tensor-content tensor))))
+
+(defmethod drop ((scalar scalar) (tensor tensor)))
+
+(defmethod drop ((tensor tensor) (tensor2 tensor)))
