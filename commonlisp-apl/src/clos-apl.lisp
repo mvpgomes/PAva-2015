@@ -15,13 +15,13 @@
 
 ;;; Project implementation
 (defclass tensor ()
-    ((data :type array
+    ((data :type list
            :reader tensor-content
            :initarg :initial-content)))
 
 (defclass scalar (tensor) ())
 
-(defun reduce-n-times (fn vector begin end)
+(defun reduce-subsets (fn vector begin end)
   (if (< (length vector) end)
       (v)
    (v (reduce fn vector :start begin :end end) (reduce-n-times fn vector begin (+ end 1)))))
@@ -102,10 +102,10 @@
 " --------------------------- Tensor Constructors ---------------------------- "
 
 " - s : element -> tensor : receives a parameter and returns a scalar."
-(defun s (element) (make-instance 'scalar :initial-content (make-array nil :initial-contents element)))
+(defun s (element) (make-instance 'scalar :initial-content element))
 
 " - v : element -> tensor : receives a parameter list and returns a vector."
-(defun v (&rest elements) (make-instance 'tensor :initial-content (make-array (length elements) :initial-contents elements)))
+(defun v (&rest elements) (make-instance 'tensor :initial-content elements))
 
 " ---------------------------- Generic Functions ----------------------------- "
 
@@ -341,7 +341,7 @@
 
 (defun scan (fn)
   (lambda (tensor)
-    (reduce-n-times fn (tensor-content tensor) 0 1)))
+    (reduce-subsets fn (tensor-content tensor) 0 1)))
 
 (defun reshape (tensor-dimensions tensor-content)
     (let ((counter 0))
