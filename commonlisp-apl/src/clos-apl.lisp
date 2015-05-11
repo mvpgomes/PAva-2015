@@ -325,7 +325,7 @@
                                 (dotimes (i (car dimensions))
                                     (setf result (cons (rec (cdr dimensions) content) result)))
                                 (reverse result))))))
-            (rec (tensor-content tensor-dimensions) (tensor-content tensor-content)))))
+            (make-instance 'tensor :initial-content (rec (tensor-content tensor-dimensions) (tensor-content tensor-content))))))
 
 (defmethod member? ((tensor tensor) (elements tensor))
     (map-tensor (compose #'bool->int
