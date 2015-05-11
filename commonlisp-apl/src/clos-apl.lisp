@@ -13,9 +13,6 @@
         1
         0))
 
-(defun length-array (array)
-   (reduce #'* (array-dimensions array)))
-
 ;;; Project implementation
 (defclass tensor ()
     ((data :type array
@@ -29,16 +26,10 @@
       (v)
    (v (reduce fn vector :start begin :end end) (reduce-n-times fn vector begin (+ end 1)))))
 
-
 (defun scalar-to-tensor (scalar tensor)
   (let* ((n (aref (tensor-content scalar)))
         (dim (array-dimensions (tensor-content tensor))))
     (make-instance 'tensor :initial-content (make-array dim :initial-element n))))
-
-(defun map-tensor-2 (f left-tensor &rest right-tensor)
-    (let* ((content (tensor-content left-tensor))
-           (additional-content (tensor-content (first right-tensor))))
-        (make-instance 'tensor :initial-content (map-array f content additional-content))))
 
 (defun map-tensor (function &rest tensors)
     (make-instance 'tensor :initial-content (apply #'map-array function (mapcar #'tensor-content tensors))))
@@ -54,13 +45,33 @@
         result-array))
 
 (defun fold-tensor (function tensor initial-value)
-    (fold-array function (tensor-content tensor) initial-value))
+    (fold-tree function (tensor-content tensor) initial-value))
 
-(defun fold-array (function array initial-value)
-    (let ((acc initial-value))
-        (dotimes (i (length-array array))
-            (setf acc (funcall function (row-major-aref array i) acc)))
-        acc))
+(defun linearize-list (arg)
+    (cond ((null arg) nil)
+          ((atom (car arg)) (cons (car arg) (cdr arg)))
+          (t (append (linearize-list (car arg)) (linearize-list (cdr arg))))))
+
+(defun fold-tree (function list initial-value)
+    (reduce function (linearize-list list) :initial-value initial-value))
+
+(defun print-list (list stream)
+    (labels ((rec (arg last-iteration)
+                (cond ((null arg) nil)
+                      ((atom (car arg))
+                          (format stream
+                                  (if (null (cdr arg)) "~A" "~A ")
+                                  (car arg))
+                          (rec (cdr arg) nil))
+                      ((and (listp (car arg)) (null (cdr arg)))
+                          (rec (car arg) last-iteration)
+                          (unless last-iteration
+                            (format stream "~%")))
+                      (t
+                          (rec (car arg) nil)
+                          (format stream "~%")
+                          (rec (cdr arg) last-iteration)))))
+        (rec list t)))
 
 (defmethod print-object ((scalar scalar) (stream stream))
     "Implementation of the generic method print-object for the scalar data structure.
@@ -332,9 +343,18 @@
   (lambda (tensor)
     (reduce-n-times fn (tensor-content tensor) 0 1)))
 
-(defun reshape (dimensions contents)
-    (let ((result-array (make-array (map 'list #'identity (tensor-content dimensions))))
-           (numbers (tensor-content contents)))
-        (dotimes (i (length-array result-array))
-            (setf (row-major-aref result-array i) (aref numbers (rem i (length numbers)))))
-        (make-instance 'tensor :initial-content result-array)))
+(defun reshape (tensor-dimensions tensor-content)
+    (let ((counter 0))
+        (labels ((rec (dimensions content)
+                    (cond ((null (cdr dimensions))
+                            (let ((result '()))
+                                (dotimes (i (car dimensions))
+                                    (setf result (cons (nth (mod counter (length content)) content) result))
+                                    (incf counter))
+                                (reverse result)))
+                          (t
+                            (let ((result '()))
+                                (dotimes (i (car dimensions))
+                                    (setf result (cons (rec (cdr dimensions) content) result)))
+                                (reverse result))))))
+            (rec (tensor-content tensor-dimensions) (tensor-content tensor-content)))))
