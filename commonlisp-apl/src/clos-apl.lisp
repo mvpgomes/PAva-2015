@@ -24,6 +24,12 @@
 
 (defclass scalar (tensor) ())
 
+(defun reduce-n-times (fn vector begin end)
+  (if (< (length vector) end)
+      (v)
+   (v (reduce fn vector :start begin :end end) (reduce-n-times fn vector begin (+ end 1)))))
+
+
 (defun scalar-to-tensor (scalar tensor)
   (let* ((n (aref (tensor-content scalar)))
         (dim (array-dimensions (tensor-content tensor))))
@@ -297,6 +303,12 @@
      elements of the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
     (map-tensor (compose #'bool->int (lambda (e1 e2) (and e1 e2))) tensor tensor2))
+
+" ---------------------------- Monadic Operators ----------------------------- "
+
+(defun scan (fn)
+  (lambda (tensor)
+    (reduce-n-times fn (tensor-content tensor) 0 1)))
 
 (defun reshape (dimensions contents)
     (let ((result-array (make-array (map 'list #'identity (tensor-content dimensions))))
