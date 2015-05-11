@@ -59,7 +59,12 @@
 (defun fold-tree (function list initial-value)
     (reduce function (linearize-list list) :initial-value initial-value))
 
-(defun print-list (list stream)
+(defmethod print-object ((tensor tensor) (stream stream))
+    "Implementation of the generic method print-object for the tensor data structure.
+     If the tensor is a vector, prints its elements separated by a whitespace.
+     If the tensor is not one of the previous cases, then for each sub-tensor of the
+     first dimension, prints the sub-tensor separated from the next sub-tensor by a
+     number of empty lines that is equal to the number of dimensions minus one."
     (labels ((rec (arg last-iteration)
                 (cond ((null arg) nil)
                       ((atom (car arg))
@@ -75,33 +80,7 @@
                           (rec (car arg) nil)
                           (format stream "~%")
                           (rec (cdr arg) last-iteration)))))
-        (rec list t)))
-
-(defmethod print-object ((scalar scalar) (stream stream))
-    "Implementation of the generic method print-object for the scalar data structure.
-     If the tensor is a scalar, print a single-element."
-    (format stream "~A" (aref (tensor-content scalar))))
-
-(defmethod print-object ((tensor tensor) (stream stream))
-    "Implementation of the generic method print-object for the tensor data structure.
-     If the tensor is a vector, prints its elements separated by a whitespace.
-     If the tensor is not one of the previous cases, then for each sub-tensor of the
-     first dimension, prints the sub-tensor separated from the next sub-tensor by a
-     number of empty lines that is equal to the number of dimensions minus one."
-    (labels ((rec (array subscripts from-last-iteration)
-                (let* ((cur-dim (length subscripts))
-                       (cur-dim-size (nth cur-dim (array-dimensions array))))
-                    (if (eql cur-dim (array-rank array))
-                        (format stream
-                                (if (zerop (first (last subscripts))) "~A" " ~A")
-                                (apply #'aref array subscripts))
-                        (dotimes (i cur-dim-size)
-                            (let ((last-iteration (and from-last-iteration
-                                                       (eql i (- cur-dim-size 1)))))
-                                (rec array (append subscripts (list i)) last-iteration)
-                                (unless (or last-iteration (eql cur-dim (- (array-rank array) 1)))
-                                    (format stream "~%"))))))))
-        (rec (tensor-content tensor) '() t)))
+        (rec (tensor-content tensor) stream)))
 
 " --------------------------- Tensor Constructors ---------------------------- "
 
@@ -331,21 +310,6 @@
      the integers 0 or 1."
     (map-tensor (compose #'bool->int (lambda (e1 e2) (and e1 e2))) tensor tensor2))
 
-(defmethod member? ((tensor tensor) (elements tensor))
-    (map-tensor (compose #'bool->int
-                         (lambda (tensor-elem)
-                            (fold-tensor (lambda (elem acc)
-                                            (or (eql tensor-elem elem)
-                                                 acc))
-                                         elements
-                                         nil)))
-                tensor))
-
-" ---------------------------- Monadic Operators ----------------------------- "
-
-(defun scan (fn)
-  (lambda (tensor)
-    (reduce-subsets fn (tensor-content tensor) 0 1)))
 
 (defun reshape (tensor-dimensions tensor-content)
     (let ((counter 0))
@@ -362,3 +326,21 @@
                                     (setf result (cons (rec (cdr dimensions) content) result)))
                                 (reverse result))))))
             (rec (tensor-content tensor-dimensions) (tensor-content tensor-content)))))
+
+(defmethod member? ((tensor tensor) (elements tensor))
+    (map-tensor (compose #'bool->int
+                         (lambda (tensor-elem)
+                            (fold-tensor (lambda (elem acc) (or (eql tensor-elem elem) acc))
+                                         elements
+                                         nil)))
+                tensor))
+
+" ---------------------------- Monadic Operators ----------------------------- "
+
+(defun scan (fn)
+  (lambda (tensor)
+    (reduce-subsets fn (tensor-content tensor) 0 1)))
+
+(defun fold (fn)
+    (lambda (tensor)
+        (reduce fn (tensor-content tensor))))
