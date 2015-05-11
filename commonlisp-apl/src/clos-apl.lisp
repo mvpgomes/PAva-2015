@@ -13,8 +13,8 @@
         1
         0))
 
-(defun make-displaced-array (array)
-   (make-array (reduce #'* (array-dimensions array)) :displaced-to array))
+(defun length-array (array)
+   (reduce #'* (array-dimensions array)))
 
 ;;; Project implementation
 (defclass tensor ()
@@ -31,45 +31,44 @@
 
 (defun map-tensor (f left-tensor &rest right-tensor)
     (let* ((content (tensor-content left-tensor))
-          (additional-content (tensor-content (first right-tensor)))
-          (new-array (make-array (array-dimensions content))))
-        (map-array f content additional-content)))
+           (additional-content (tensor-content (first right-tensor))))
+        (make-instance 'tensor :initial-content (map-array f content additional-content))))
 
 (defun map-array (function &rest arrays)
     "Maps the function over the arrays.
      Assumes that all arrays are of the same dimensions.
      Returns a new result array of the same dimension."
-    (let* ((displaced-arrays (mapcar #'make-displaced-array arrays))
-           (result-array (make-array (array-dimensions (first arrays))))
-           (displaced-result-array (make-displaced-array result-array)))
-        (apply #'map-into displaced-result-array function displaced-arrays)
+    (let ((result-array (make-array (array-dimensions (first arrays)))))
+        (dotimes (i (length-array (first arrays)))
+            (setf (row-major-aref result-array i)
+                  (apply function (mapcar (lambda (array) (row-major-aref array i)) arrays))))
         result-array))
 
-(defun last-iteration-dimension (array-dimensions array-subscripts)
-    (if (null array-subscripts)
-        t
-        (and (eql (car array-subscripts) (- (car array-dimensions) 1))
-             (last-iteration-dimension (cdr array-dimensions) (cdr array-subscripts)))))
+(defmethod print-object ((scalar scalar) (stream stream))
+    "Implementation of the generic method print-object for the scalar data structure.
+     If the tensor is a scalar, print a single-element."
+    (format stream "~A" (aref (tensor-content scalar))))
 
 (defmethod print-object ((tensor tensor) (stream stream))
     "Implementation of the generic method print-object for the tensor data structure.
-     If the tensor is a scalar, print a single-element.
      If the tensor is a vector, prints its elements separated by a whitespace.
      If the tensor is not one of the previous cases, then for each sub-tensor of the
      first dimension, prints the sub-tensor separated from the next sub-tensor by a
      number of empty lines that is equal to the number of dimensions minus one."
-    (labels ((rec (array subscripts)
+    (labels ((rec (array subscripts from-last-iteration)
                 (let* ((cur-dim (length subscripts))
                        (cur-dim-size (nth cur-dim (array-dimensions array))))
                     (if (eql cur-dim (array-rank array))
-                        (format stream "~A " (apply #'aref array subscripts))
+                        (format stream
+                                (if (zerop (first (last subscripts))) "~A" " ~A")
+                                (apply #'aref array subscripts))
                         (dotimes (i cur-dim-size)
-                            (let ((cur-subscripts (append subscripts (list i))))
-                                (rec array cur-subscripts)
-                                (unless (or (eql cur-dim (- (array-rank array) 1))
-                                            (last-iteration-dimension (array-dimensions array) cur-subscripts))
-                                    (format stream "~%" cur-dim cur-dim-size))))))))
-        (rec (tensor-content tensor) '())))
+                            (let ((last-iteration (and from-last-iteration
+                                                       (eql i (- cur-dim-size 1)))))
+                                (rec array (append subscripts (list i)) last-iteration)
+                                (unless (or last-iteration (eql cur-dim (- (array-rank array) 1)))
+                                    (format stream "~%"))))))))
+        (rec (tensor-content tensor) '() t)))
 
 " --------------------------- Tensor Constructors ---------------------------- "
 
@@ -133,7 +132,7 @@
 (defmethod symmetric ((tensor tensor))
     (map-tensor #'- tensor))
 
-(defmethod substract ((tensor1 tensor) (tensor2 tensor))
+(defmethod subtract ((tensor1 tensor) (tensor2 tensor))
     (map-tensor #'- tensor1 tensor2))
 
 (defmethod ./ ((tensor tensor) &optional (tensor2 tensor))
@@ -172,7 +171,7 @@
     (labels ((rec (i n)
                 (unless (> i n)
                     (cons i (rec (1+ i) n)))))
-        (v (rec 1 n))))
+        (apply #'v (rec 1 n))))
 
 " ---------------------------- Dyadic Functions ----------------------------- "
 
@@ -300,9 +299,8 @@
     (map-tensor (compose #'bool->int (lambda (e1 e2) (and e1 e2))) tensor tensor2))
 
 (defun reshape (dimensions contents)
-    (let* ((result-array (make-array (map 'list #'identity (tensor-content dimensions))))
-           (numbers (tensor-content contents))
-           (displaced-array (make-displaced-array result-array)))
-        (dotimes (i (length displaced-array))
-            (setf (aref displaced-array i) (aref numbers (rem i (length numbers)))))
+    (let ((result-array (make-array (map 'list #'identity (tensor-content dimensions))))
+           (numbers (tensor-content contents)))
+        (dotimes (i (length-array result-array))
+            (setf (row-major-aref result-array i) (aref numbers (rem i (length numbers)))))
         (make-instance 'tensor :initial-content result-array)))
