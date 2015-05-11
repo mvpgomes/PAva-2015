@@ -32,17 +32,21 @@
     (make-instance 'tensor :initial-content (make-array dim :initial-element n))))
 
 (defun map-tensor (function &rest tensors)
-    (make-instance 'tensor :initial-content (apply #'map-array function (mapcar #'tensor-content tensors))))
+    (make-instance 'tensor :initial-content (apply #'map-tree function (mapcar #'tensor-content tensors))))
 
-(defun map-array (function &rest arrays)
-    "Maps the function over the arrays.
-     Assumes that all arrays are of the same dimensions.
-     Returns a new result array of the same dimension."
-    (let ((result-array (make-array (array-dimensions (first arrays)))))
-        (dotimes (i (length-array (first arrays)))
-            (setf (row-major-aref result-array i)
-                  (apply function (mapcar (lambda (array) (row-major-aref array i)) arrays))))
-        result-array))
+(defun map-tree (function &rest lists)
+    "Maps the function over the lists.
+     Assumes that all lists are of the same dimensions.
+     Returns a new list of the same dimension."
+    (let ((lst (car lists)))
+        (cond ((null lst)
+                  nil)
+              ((atom (car lst))
+                  (cons (apply function (mapcar #'car lists))
+                        (apply #'map-tree function (mapcar #'cdr lists))))
+              (t
+                  (cons (apply #'map-tree function (mapcar #'car lists))
+                        (apply #'map-tree function (mapcar #'cdr lists)))))))
 
 (defun fold-tensor (function tensor initial-value)
     (fold-tree function (tensor-content tensor) initial-value))
