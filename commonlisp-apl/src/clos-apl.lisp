@@ -26,6 +26,11 @@
     lst
   (drop-elements (cdr lst) (- num-elements 1))))
 
+(defun list-dimensions (lst)
+  (if (atom (car lst))
+    (list-length lst)
+    (v (list-length lst) (list-dimensions (first lst)))))
+
 (defun reduce-subsets (fn vector begin end)
   (if (< (length vector) end)
       (v)
@@ -182,7 +187,7 @@
 (defmethod shape ((tensor tensor))
     " - shape : tensor -> tensor : receives a tensor and return a new tensor
      that contains the length of each dimension of the tensor."
-    (v (array-dimensions (tensor-content tensor))))
+    (list-dimensions (tensor-content tensor)))
 
 (defun interval (n)
     "Creates a vector containing an enumeration of all integers starting
