@@ -221,32 +221,32 @@
 (defmethod .> ((tensor tensor) (tensor2 tensor))
   " - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
     result of the comparsion (greater then) between the elements of the tensors."
-    (map-tensor #'> tensor tensor2))
+    (map-tensor (compose #'bool->int #'>) tensor tensor2))
 
 (defmethod .> ((scalar scalar) (tensor tensor))
   " - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
     result of the comparsion (greater then) between the scalar and the elements of the tensor."
-    (map-tensor #'> (scalar-to-tensor scalar tensor) tensor))
+    (map-tensor (compose #'bool->int #'>) (scalar-to-tensor scalar tensor) tensor))
 
 (defmethod .> ((tensor tensor) (scalar scalar))
   " - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
     result of the comparsion (greater then) between the elements of the tensor and the scalar."
-    (map-tensor #'> tensor (scalar-to-tensor scalar tensor)))
+    (map-tensor (compose #'bool->int #'>) tensor (scalar-to-tensor scalar tensor)))
 
 (defmethod .>= ((tensor tensor) (tensor2 tensor))
   " - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
     result of the comparsion (greater equals then) between the elements of the tensors."
-    (map-tensor #'>= tensor tensor2))
+    (map-tensor (compose #'bool->int #'>=) tensor tensor2))
 
 (defmethod .>= ((scalar scalar) (tensor tensor))
   " - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
     result of the comparsion (greater equals then) between the scalar and the elements of the tensor."
-    (map-tensor #'>= (scalar-to-tensor scalar tensor) tensor))
+    (map-tensor (compose #'bool->int #'>=) (scalar-to-tensor scalar tensor) tensor))
 
 (defmethod .>= ((tensor tensor) (scalar scalar))
   " - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
     result of the comparsion (greater equals then) between the elements of the tensor and the scalar.."
-    (map-tensor #'>= tensor (scalar-to-tensor scalar tensor)))
+    (map-tensor (compose #'bool->int #'>=) tensor (scalar-to-tensor scalar tensor)))
 
 (defmethod .or ((tensor tensor) (tensor2 tensor))
   " - .or : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
