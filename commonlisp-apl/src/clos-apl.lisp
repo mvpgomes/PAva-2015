@@ -13,6 +13,11 @@
         1
         0))
 
+(defun int->bool (int)
+    (if (zerop int)
+        nil
+        t))
+
 ;;; Project implementation
 (defclass tensor ()
     ((data :type list
@@ -319,7 +324,7 @@
     "Creates a tensor using the relation \"less or equal than\" on the corresponding
      elements of the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
-    (map-tensor (compose #'bool->int (lambda (e1 e2) (and e1 e2))) tensor tensor2))
+    (map-tensor (compose (lambda (e1 e2) (and e1 e2)) #'int->bool) tensor tensor2))
 
 (defun reshape (tensor-dimensions tensor-content)
     (let ((counter 0))
