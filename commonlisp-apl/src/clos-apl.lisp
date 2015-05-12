@@ -27,7 +27,7 @@
 (defclass scalar (tensor) ())
 
 (defun rank (tensor)
-    (length (tensor-content tensor)))
+    (length (tensor-content (shape tensor))))
 
 (defun drop-elements (lst num-elements)
   (if (= num-elements 0)
@@ -73,9 +73,12 @@
     (fold-tree function (tensor-content tensor) initial-value))
 
 (defun linearize-list (arg)
-    (cond ((null arg) nil)
-          ((atom (car arg)) (cons (car arg) (cdr arg)))
-          (t (append (linearize-list (car arg)) (linearize-list (cdr arg))))))
+    (cond ((null arg)
+            nil)
+          ((atom (car arg))
+            (cons (car arg) (cdr arg)))
+          (t
+            (append (linearize-list (car arg)) (linearize-list (cdr arg))))))
 
 (defun fold-tree (function list initial-value)
     (reduce function (linearize-list list) :initial-value initial-value))
@@ -354,10 +357,31 @@
                    :initial-content (list (first (tensor-content s1)) (first (tensor-content s2)))))
 
 (defmethod catenate ((scalar scalar) (tensor tensor))
-    (catenate (reshape (tensor-dimensions (tensor-content tensor)) (tensor-content scalar))
-              tensor))
+    (catenate (reshape (shape tensor) scalar) tensor))
 
-(defmethod catenate ((t1 tensor) (t2 tensor)))
+(defmethod catenate ((tensor tensor) (scalar scalar))
+    (catenate tensor (reshape (shape tensor) scalar)))
+
+(defmethod catenate ((t1 tensor) (t2 tensor))
+    (labels ((append-elements-last-dim (list1 list2)
+                (cond ((null list1)
+                        nil)
+                      ((atom (car list1))
+                        (append list1 list2))
+                      (t
+                        (cons (append-elements-last-dim (car list1) (car list2))
+                              (append-elements-last-dim (cdr list1) (cdr list2))))))
+             (add-dim-1 (tensor)
+                (reshape (apply #'v (append (tensor-content (shape tensor)) (list 1)))
+                         (make-instance 'tensor :initial-content (linearize-list (tensor-content tensor))))))
+        (make-instance 'tensor
+                       :initial-content (cond ((eql (rank t1) (rank t2))
+                                                (append-elements-last-dim (tensor-content t1) (tensor-content t2)))
+                                              ((< (rank t1) (rank t2))
+                                                (append-elements-last-dim (add-dim-1 t1) (tensor-content t2)))
+                                              (t
+                                                (append-elements-last-dim (tensor-content t1) (add-dim-1 t2)))))))
+
 
 
 (defmethod member? ((tensor tensor) (elements tensor))
