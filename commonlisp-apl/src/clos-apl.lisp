@@ -33,8 +33,13 @@
 
 (defun list-dimensions (lst)
   (if (atom (car lst))
-    (list-length lst)
-    (v (list-length lst) (list-dimensions (first lst)))))
+    (v (list-length lst))
+    (v (list-length lst) (list-dimensions (car lst)))))
+
+(defun remove-element (lst index)
+  (if (= index 0)
+    (cdr lst)
+  (cons (car lst) (remove-element (cdr lst) (- index 1)))))
 
 (defun reduce-subsets (fn vector begin end)
   (if (< (length vector) end)
@@ -256,7 +261,7 @@
 (defmethod .or ((tensor tensor) (tensor2 tensor))
   " - .or : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
     result of the logical comparsion (or) between the elements of the tensors."
-    (map-tensor (compose #'bool->int (lambda (e1 e2) (or e1 e2))) tensor tensor2))
+    (map-tensor (compose #'bool->int (lambda (e1 e2) (or (int->bool e1) (int->bool e2)))) tensor tensor2))
 
 (defmethod .* ((tensor tensor) (tensor2 tensor))
     "Creates a tensor with the multiplication of the corresponding elements of
@@ -324,7 +329,7 @@
     "Creates a tensor using the relation \"less or equal than\" on the corresponding
      elements of the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
-    (map-tensor (compose (lambda (e1 e2) (and e1 e2)) #'int->bool) tensor tensor2))
+    (map-tensor (compose #'bool->int #'(lambda (e1 e2) (and (int->bool e1) (int->bool e2)))) tensor tensor2))
 
 (defun reshape (tensor-dimensions tensor-content)
     (let ((counter 0))
@@ -368,6 +373,13 @@
       (v (drop-elements (tensor-content tensor) elements-to-remove))
     (v (reverse (drop-elements (reverse (tensor-content tensor)) (abs elements-to-remove)))))))
 
-(defmethod drop ((tensor tensor) (tensor2 tensor)))
+(defun drop-elements (elements-to-drop lst)
+  (cond ((null elements-to-drop) nil)
+         ((zerop (car elements-to-drop)) (cons (car lst) (drop-elements (cdr elements-to-drop) (cdr lst))))
+         (t (let ((rest (remove-element lst (- (car elements-to-drop) 1))))
+                  (drop-elements (cdr elements-to-drop) rest)))))
+
+(defmethod drop ((tensor tensor) (tensor2 tensor))
+  (drop-elements (tensor-content tensor) (tensor-content tensor2)))
 
 " ---------------------------- Exercises -------------------------------------- "
