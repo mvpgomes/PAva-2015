@@ -26,15 +26,17 @@
 
 (defclass scalar (tensor) ())
 
+(defun rank (tensor)
+    (length (tensor-content tensor)))
+
 (defun drop-elements (lst num-elements)
   (if (= num-elements 0)
     lst
   (drop-elements (cdr lst) (- num-elements 1))))
 
 (defun list-dimensions (lst)
-  (if (atom (car lst))
-    (v (list-length lst))
-    (v (list-length lst) (list-dimensions (car lst)))))
+    (when (listp lst)
+          (cons (length lst) (list-dimensions (car lst)))))
 
 (defun remove-element (lst index)
   (if (= index 0)
@@ -99,7 +101,7 @@
                           (rec (car arg) nil)
                           (format stream "~%")
                           (rec (cdr arg) last-iteration)))))
-        (rec (tensor-content tensor) stream)))
+        (rec (tensor-content tensor) t)))
 
 " --------------------------- Tensor Constructors ---------------------------- "
 
@@ -196,7 +198,7 @@
 (defmethod shape ((tensor tensor))
     " - shape : tensor -> tensor : receives a tensor and return a new tensor
      that contains the length of each dimension of the tensor."
-    (list-dimensions (tensor-content tensor)))
+     (make-instance 'tensor :initial-content (list-dimensions (tensor-content tensor))))
 
 (defun interval (n)
     "Creates a vector containing an enumeration of all integers starting
@@ -346,6 +348,17 @@
                                     (setf result (cons (rec (cdr dimensions) content) result)))
                                 (reverse result))))))
             (make-instance 'tensor :initial-content (rec (tensor-content tensor-dimensions) (tensor-content tensor-content))))))
+
+(defmethod catenate ((s1 scalar) (s2 scalar))
+    (make-instance 'tensor
+                   :initial-content (list (first (tensor-content s1)) (first (tensor-content s2)))))
+
+(defmethod catenate ((scalar scalar) (tensor tensor))
+    (catenate (reshape (tensor-dimensions (tensor-content tensor)) (tensor-content scalar))
+              tensor))
+
+(defmethod catenate ((t1 tensor) (t2 tensor)))
+
 
 (defmethod member? ((tensor tensor) (elements tensor))
     (map-tensor (compose #'bool->int
