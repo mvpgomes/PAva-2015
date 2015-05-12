@@ -37,9 +37,9 @@
    (v (reduce fn vector :start begin :end end) (reduce-subsets fn vector begin (+ end 1)))))
 
 (defun scalar-to-tensor (scalar tensor)
-  (let* ((n (aref (tensor-content scalar)))
-        (dim (array-dimensions (tensor-content tensor))))
-    (make-instance 'tensor :initial-content (make-array dim :initial-element n))))
+  (let* ((n (first (tensor-content scalar)))
+        (dim (list-length (tensor-content tensor))))
+    (make-instance 'tensor :initial-content (make-list dim :initial-element n))))
 
 (defun map-tensor (function &rest tensors)
     (make-instance 'tensor :initial-content (apply #'map-tree function (mapcar #'tensor-content tensors))))
@@ -49,8 +49,7 @@
      Assumes that all lists are of the same dimensions.
      Returns a new list of the same dimension."
     (let ((lst (car lists)))
-        (cond ((null lst)
-                  nil)
+        (cond ((null lst) nil)
               ((atom (car lst))
                   (cons (apply function (mapcar #'car lists))
                         (map-tree function (apply #'values (mapcar #'cdr lists)))))
