@@ -52,10 +52,10 @@
         (cond ((null lst) nil)
               ((atom (car lst))
                   (cons (apply function (mapcar #'car lists))
-                        (map-tree function (apply #'values (mapcar #'cdr lists)))))
+                        (apply #'map-tree function (mapcar #'cdr lists))))
               (t
-                  (cons (map-tree function (apply #'values (mapcar #'car lists)))
-                        (map-tree function (apply #'values (mapcar #'cdr lists))))))))
+                  (cons (apply #'map-tree function (mapcar #'car lists))
+                        (apply #'map-tree function (mapcar #'cdr lists)))))))
 
 (defun fold-tensor (function tensor initial-value)
     (fold-tree function (tensor-content tensor) initial-value))
