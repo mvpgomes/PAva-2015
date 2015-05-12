@@ -350,6 +350,18 @@
                                          nil)))
                 tensor))
 
+(defmethod select ((filter-tensor tensor) (elements-tensor tensor))
+    (labels ((rec (filter elements)
+                (cond ((null elements)
+                        nil)
+                      ((atom (car elements))
+                        (if (zerop (car filter))
+                            (rec (cdr filter) (cdr elements))
+                            (cons (car elements) (rec (cdr filter) (cdr elements)))))
+                      (t
+                        (cons (rec filter (car elements)) (rec filter (cdr elements)))))))
+        (make-instance 'tensor :initial-content (rec (tensor-content filter-tensor) (tensor-content elements-tensor)))))
+
 " ---------------------------- Monadic Operators ----------------------------- "
 
 (defun fold (fn)
