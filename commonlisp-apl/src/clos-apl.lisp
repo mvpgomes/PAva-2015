@@ -76,16 +76,16 @@
 (defun fold-tensor (function tensor initial-value)
     (fold-tree function (tensor-content tensor) initial-value))
 
-(defun linearize-list (arg)
+(defun flatten (arg)
     (cond ((null arg)
             nil)
           ((atom (car arg))
             (cons (car arg) (cdr arg)))
           (t
-            (append (linearize-list (car arg)) (linearize-list (cdr arg))))))
+            (append (flatten (car arg)) (flatten (cdr arg))))))
 
 (defun fold-tree (function list initial-value)
-    (reduce function (linearize-list list) :initial-value initial-value))
+    (reduce function (flatten list) :initial-value initial-value))
 
 (defmethod print-object ((tensor tensor) (stream stream))
     "Implementation of the generic method print-object for the tensor data structure.
@@ -355,7 +355,7 @@
                                     (setf result (cons (rec (cdr dimensions) content) result)))
                                 (reverse result))))))
             (make-instance 'tensor :initial-content (rec (tensor-content tensor-dimensions)
-                                                         (linearize-list (tensor-content tensor-content)))))))
+                                                         (flatten (tensor-content tensor-content)))))))
 
 (defmethod catenate ((s1 scalar) (s2 scalar))
     (make-instance 'tensor
@@ -378,7 +378,7 @@
                               (append-elements-last-dim (cdr list1) (cdr list2))))))
              (add-dim-1 (tensor)
                 (reshape (apply #'v (append (tensor-content (shape tensor)) (list 1)))
-                         (make-instance 'tensor :initial-content (linearize-list (tensor-content tensor))))))
+                         (make-instance 'tensor :initial-content (flatten (tensor-content tensor))))))
         (make-instance 'tensor
                        :initial-content (cond ((eql (rank t1) (rank t2))
                                                 (append-elements-last-dim (tensor-content t1) (tensor-content t2)))
