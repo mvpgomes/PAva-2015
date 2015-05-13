@@ -422,9 +422,7 @@
     (labels ((rec (remove-list lst)
                 (if (eql (length remove-list) 1)
                     (remove-element (car remove-list) lst)
-                    (let ((mod-lst (if (zerop (car remove-list))
-                                        lst
-                                        (remove-element (car remove-list) lst))))
+                    (let ((mod-lst (car remove-list) lst))                                
                         (mapcar (curry #'auxilary-function (cdr remove-list)) mod-lst)))))
         (make-instance 'tensor :initial-content (rec (tensor-content t1) (tensor-content t2)))))
 
