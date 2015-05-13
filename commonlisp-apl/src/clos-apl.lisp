@@ -407,6 +407,22 @@
   (lambda (tensor)
     (make-instance 'tensor :initial-content (reduce-subsets fn (mapcar #'s (tensor-content tensor)) 0 1))))
 
+(defun outer-product-aux (fn lst1 lst2)
+  (let ((result-lst '()))
+    (loop for i in lst1
+      do (loop for j in lst2
+        do (setf result-lst (append result-lst (list (funcall fn i j))))))
+  result-lst))
+
+(defun outer-product (fn)
+  (lambda (tensor1 tensor2)
+    (let ((row-dim (tensor-content (shape tensor1)))
+          (col-dim (tensor-content (shape tensor2))))
+      (reshape (make-instance 'tensor :initial-content (append row-dim col-dim))
+        (make-instance 'tensor :initial-content
+          (outer-product-aux fn (mapcar #'s (flatten (tensor-content tensor1)))
+                                (mapcar #'s(flatten (tensor-content tensor2)))))))))
+
 " --------------------------- Diadic Operators ------------------------------- "
 
 (defmethod drop ((scalar scalar) (tensor tensor))
@@ -414,7 +430,6 @@
     (if (> elements-to-remove 0)
       (v (drop-elements (tensor-content tensor) elements-to-remove))
     (v (reverse (drop-elements (reverse (tensor-content tensor)) (abs elements-to-remove)))))))
-
 
 
 (defmethod drop ((tensor tensor) (tensor2 tensor))
