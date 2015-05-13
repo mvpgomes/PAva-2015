@@ -5,6 +5,10 @@
     (lambda (&rest args)
         (funcall fn1 (apply fn2 args))))
 
+(defun curry (fn &rest args)
+    (lambda (&rest more-args)
+        (apply fn (append args more-args))))
+
 (defun bool->int (bool)
     "Returns a number depending on the argument.
      If the argument is true, it returns 1.
@@ -33,10 +37,15 @@
     (when (listp lst)
           (cons (length lst) (list-dimensions (car lst)))))
 
-(defun remove-element (lst index)
-  (if (= index 0)
-    (cdr lst)
-  (cons (car lst) (remove-element (cdr lst) (- index 1)))))
+(defun remove-element (index list)
+    (cond ((eql 0 index)
+            list)
+          ((eql 1 index)
+            (cdr list))
+          ((> index 0)
+            (cons (car list) (remove-element (- index 1) (cdr list))))
+          ((< index 0)
+            (remove-element (+ (- (length list) (- index)) 1) list))))
 
 (defun reduce-subsets (fn vector begin end)
   (if (< (length vector) end)
@@ -67,16 +76,16 @@
 (defun fold-tensor (function tensor initial-value)
     (fold-tree function (tensor-content tensor) initial-value))
 
-(defun linearize-list (arg)
+(defun flatten (arg)
     (cond ((null arg)
             nil)
           ((atom (car arg))
             (cons (car arg) (cdr arg)))
           (t
-            (append (linearize-list (car arg)) (linearize-list (cdr arg))))))
+            (append (flatten (car arg)) (flatten (cdr arg))))))
 
 (defun fold-tree (function list initial-value)
-    (reduce function (linearize-list list) :initial-value initial-value))
+    (reduce function (flatten list) :initial-value initial-value))
 
 (defmethod print-object ((tensor tensor) (stream stream))
     "Implementation of the generic method print-object for the tensor data structure.
@@ -345,7 +354,8 @@
                                 (dotimes (i (car dimensions))
                                     (setf result (cons (rec (cdr dimensions) content) result)))
                                 (reverse result))))))
-            (make-instance 'tensor :initial-content (rec (tensor-content tensor-dimensions) (tensor-content tensor-content))))))
+            (make-instance 'tensor :initial-content (rec (tensor-content tensor-dimensions)
+                                                         (flatten (tensor-content tensor-content)))))))
 
 (defmethod catenate ((s1 scalar) (s2 scalar))
     (make-instance 'tensor
@@ -368,7 +378,7 @@
                               (append-elements-last-dim (cdr list1) (cdr list2))))))
              (add-dim-1 (tensor)
                 (reshape (apply #'v (append (tensor-content (shape tensor)) (list 1)))
-                         (make-instance 'tensor :initial-content (linearize-list (tensor-content tensor))))))
+                         (make-instance 'tensor :initial-content (flatten (tensor-content tensor))))))
         (make-instance 'tensor
                        :initial-content (cond ((eql (rank t1) (rank t2))
                                                 (append-elements-last-dim (tensor-content t1) (tensor-content t2)))
@@ -407,6 +417,17 @@
   (lambda (tensor)
     (make-instance 'tensor :initial-content (reduce-subsets fn (mapcar #'s (tensor-content tensor)) 0 1))))
 
+" --------------------------- Dyadic Operators ------------------------------- "
+
+(defmethod drop ((t1 tensor) (t2 tensor))
+    (labels ((rec (remove-list lst)
+                (if (eql (length remove-list) 1)
+                    (remove-element (car remove-list) lst)
+                    (let ((mod-lst (car remove-list) lst))
+                        (mapcar (curry #'auxilary-function (cdr remove-list)) mod-lst)))))
+        (make-instance 'tensor :initial-content (rec (tensor-content t1) (tensor-content t2)))))
+
+
 (defun outer-product-aux (fn lst1 lst2)
   (let ((result-lst '()))
     (loop for i in lst1
@@ -423,16 +444,19 @@
           (outer-product-aux fn (mapcar #'s (flatten (tensor-content tensor1)))
                                 (mapcar #'s(flatten (tensor-content tensor2)))))))))
 
-" --------------------------- Diadic Operators ------------------------------- "
-
-(defmethod drop ((scalar scalar) (tensor tensor))
-  (let ((elements-to-remove (car (tensor-content scalar))))
-    (if (> elements-to-remove 0)
-      (v (drop-elements (tensor-content tensor) elements-to-remove))
-    (v (reverse (drop-elements (reverse (tensor-content tensor)) (abs elements-to-remove)))))))
-
-
-(defmethod drop ((tensor tensor) (tensor2 tensor))
-  (drop-elements (tensor-content tensor) (tensor-content tensor2)))
 
 " ---------------------------- Exercises -------------------------------------- "
+
+(defun tally (tensor)
+    (funcall (fold #'.*) (shape tensor)))
+
+(defun rank (tensor)
+    (funcall (fold #'.+) (.< (s 0) (shape tensor))))
+
+(defun within (numbers inf sup)
+    (select (.and (.>= numbers inf) (.<= numbers sup)) numbers))
+
+(defun ravel (tensor)
+    (reshape (tally tensor) tensor))
+
+(defun primes ())
