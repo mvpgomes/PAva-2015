@@ -29,11 +29,6 @@
 (defun rank (tensor)
     (length (tensor-content (shape tensor))))
 
-(defun drop-elements (lst num-elements)
-  (if (= num-elements 0)
-    lst
-  (drop-elements (cdr lst) (- num-elements 1))))
-
 (defun list-dimensions (lst)
     (when (listp lst)
           (cons (length lst) (list-dimensions (car lst)))))
@@ -45,8 +40,8 @@
 
 (defun reduce-subsets (fn vector begin end)
   (if (< (length vector) end)
-      (v)
-   (v (reduce fn vector :start begin :end end) (reduce-subsets fn vector begin (+ end 1)))))
+      nil
+   (cons (reduce fn vector :start begin :end end) (reduce-subsets fn vector begin (+ end 1)))))
 
 (defun scalar-to-tensor (scalar tensor)
   (let* ((n (first (tensor-content scalar)))
@@ -410,7 +405,7 @@
 
 (defun scan (fn)
   (lambda (tensor)
-    (reduce-subsets fn (mapcar #'s (tensor-content tensor)) 0 1)))
+    (make-instance 'tensor :initial-content (reduce-subsets fn (mapcar #'s (tensor-content tensor)) 0 1))))
 
 " --------------------------- Diadic Operators ------------------------------- "
 
@@ -420,11 +415,7 @@
       (v (drop-elements (tensor-content tensor) elements-to-remove))
     (v (reverse (drop-elements (reverse (tensor-content tensor)) (abs elements-to-remove)))))))
 
-(defun drop-elements (elements-to-drop lst)
-  (cond ((null elements-to-drop) nil)
-         ((zerop (car elements-to-drop)) (cons (car lst) (drop-elements (cdr elements-to-drop) (cdr lst))))
-         (t (let ((rest (remove-element lst (- (car elements-to-drop) 1))))
-                  (drop-elements (cdr elements-to-drop) rest)))))
+
 
 (defmethod drop ((tensor tensor) (tensor2 tensor))
   (drop-elements (tensor-content tensor) (tensor-content tensor2)))
