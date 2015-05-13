@@ -5,6 +5,10 @@
     (lambda (&rest args)
         (funcall fn1 (apply fn2 args))))
 
+(defun curry (fn &rest args)
+    (lambda (&rest more-args)
+        (apply fn (append args more-args))))
+
 (defun bool->int (bool)
     "Returns a number depending on the argument.
      If the argument is true, it returns 1.
@@ -33,10 +37,15 @@
     (when (listp lst)
           (cons (length lst) (list-dimensions (car lst)))))
 
-(defun remove-element (lst index)
-  (if (= index 0)
-    (cdr lst)
-  (cons (car lst) (remove-element (cdr lst) (- index 1)))))
+(defun remove-element (index list)
+    (cond ((eql 0 index)
+            list)
+          ((eql 1 index)
+            (cdr list))
+          ((> index 0)
+            (cons (car list) (remove-element (- index 1) (cdr list))))
+          ((< index 0)
+            (remove-element (+ (- (length list) (- index)) 1) list))))
 
 (defun reduce-subsets (fn vector begin end)
   (if (< (length vector) end)
@@ -407,17 +416,16 @@
   (lambda (tensor)
     (make-instance 'tensor :initial-content (reduce-subsets fn (mapcar #'s (tensor-content tensor)) 0 1))))
 
-" --------------------------- Diadic Operators ------------------------------- "
+" --------------------------- Dyadic Operators ------------------------------- "
 
-(defmethod drop ((scalar scalar) (tensor tensor))
-  (let ((elements-to-remove (car (tensor-content scalar))))
-    (if (> elements-to-remove 0)
-      (v (drop-elements (tensor-content tensor) elements-to-remove))
-    (v (reverse (drop-elements (reverse (tensor-content tensor)) (abs elements-to-remove)))))))
-
-
-
-(defmethod drop ((tensor tensor) (tensor2 tensor))
-  (drop-elements (tensor-content tensor) (tensor-content tensor2)))
+(defmethod drop ((t1 tensor) (t2 tensor))
+    (labels ((rec (remove-list lst)
+                (if (eql (length remove-list) 1)
+                    (remove-element (car remove-list) lst)
+                    (let ((mod-lst (if (zerop (car remove-list))
+                                        lst
+                                        (remove-element (car remove-list) lst))))
+                        (mapcar (curry #'auxilary-function (cdr remove-list)) mod-lst)))))
+        (make-instance 'tensor :initial-content (rec (tensor-content t1) (tensor-content t2)))))
 
 " ---------------------------- Exercises -------------------------------------- "
