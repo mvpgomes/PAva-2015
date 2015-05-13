@@ -382,8 +382,6 @@
                                               (t
                                                 (append-elements-last-dim (tensor-content t1) (add-dim-1 t2)))))))
 
-
-
 (defmethod member? ((tensor tensor) (elements tensor))
     (map-tensor (compose #'bool->int
                          (lambda (tensor-elem)
@@ -408,7 +406,7 @@
 
 (defun fold (fn)
     (lambda (tensor)
-        (reduce fn (tensor-content tensor))))
+        (reduce fn (mapcar #'s (tensor-content tensor)))))
 
 (defun scan (fn)
   (lambda (tensor)
