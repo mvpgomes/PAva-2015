@@ -354,7 +354,8 @@
                                 (dotimes (i (car dimensions))
                                     (setf result (cons (rec (cdr dimensions) content) result)))
                                 (reverse result))))))
-            (make-instance 'tensor :initial-content (rec (tensor-content tensor-dimensions) (tensor-content tensor-content))))))
+            (make-instance 'tensor :initial-content (rec (tensor-content tensor-dimensions)
+                                                         (linearize-list (tensor-content tensor-content)))))))
 
 (defmethod catenate ((s1 scalar) (s2 scalar))
     (make-instance 'tensor
@@ -422,8 +423,22 @@
     (labels ((rec (remove-list lst)
                 (if (eql (length remove-list) 1)
                     (remove-element (car remove-list) lst)
-                    (let ((mod-lst (car remove-list) lst))                                
+                    (let ((mod-lst (car remove-list) lst))
                         (mapcar (curry #'auxilary-function (cdr remove-list)) mod-lst)))))
         (make-instance 'tensor :initial-content (rec (tensor-content t1) (tensor-content t2)))))
 
 " ---------------------------- Exercises -------------------------------------- "
+
+(defun tally (tensor)
+    (funcall (fold #'.*) (shape tensor)))
+
+(defun rank (tensor)
+    (funcall (fold #'.+) (.< (s 0) (shape tensor))))
+
+(defun within (numbers inf sup)
+    (select (.and (.>= numbers inf) (.<= numbers sup)) numbers))
+
+(defun ravel (tensor)
+    (reshape (tally tensor) tensor))
+
+(defun primes ())
