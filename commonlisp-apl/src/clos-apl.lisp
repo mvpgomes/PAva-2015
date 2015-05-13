@@ -410,7 +410,7 @@
 
 (defun scan (fn)
   (lambda (tensor)
-    (reduce-subsets fn (tensor-content tensor) 0 1)))
+    (reduce-subsets fn (mapcar #'s (tensor-content tensor)) 0 1)))
 
 " --------------------------- Diadic Operators ------------------------------- "
 
