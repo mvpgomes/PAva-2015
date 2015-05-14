@@ -418,4 +418,6 @@
 (defun ravel (tensor)
     (reshape (tally tensor) tensor))
 
-(defun primes ())
+(defun primes (index)
+  (let ((numbers (drop (s 1) (interval index))))
+    (select (.not (member? numbers (funcall (outer-product #'.*) numbers numbers))) numbers)))
