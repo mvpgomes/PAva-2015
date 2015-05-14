@@ -30,9 +30,6 @@
 
 (defclass scalar (tensor) ())
 
-(defun rank (tensor)
-    (length (tensor-content (shape tensor))))
-
 (defun list-dimensions (lst)
     (when (listp lst)
           (cons (length lst) (list-dimensions (car lst)))))
@@ -117,50 +114,6 @@
 
 " - v : element -> tensor : receives a parameter list and returns a vector."
 (defun v (&rest elements) (make-instance 'tensor :initial-content elements))
-
-" ---------------------------- Generic Functions ----------------------------- "
-
-(defgeneric .- (tensor &optional tensor2))
-
-(defgeneric symmetric (tensor))
-
-(defgeneric subtract (tensor1 tensor2))
-
-(defgeneric ./ (tensor &optional tensor2))
-
-(defgeneric .! (tensor))
-
-(defgeneric .sin (tensor))
-
-(defgeneric .cos (tensor))
-
-(defgeneric .not (tensor))
-
-(defgeneric shape (tensor))
-
-(defgeneric .+ (tensor2 tensor))
-
-(defgeneric .% (tensor2 tensor))
-
-(defgeneric .> (tensor2 tensor))
-
-(defgeneric .>= (tensor2 tensor))
-
-(defgeneric .or (tensor2 tensor))
-
-(defgeneric .* (tensor2 tensor))
-
-(defgeneric .// (tensor2 tensor))
-
-(defgeneric .< (tensor2 tensor))
-
-(defgeneric .<= (tensor2 tensor))
-
-(defgeneric .= (tensor2 tensor))
-
-(defgeneric .and (tensor2 tensor))
-
-(defgeneric drop (tensor2 tensor))
 
 " ---------------------------- Monadic Functions ----------------------------- "
 
@@ -343,6 +296,14 @@
      the integers 0 or 1."
     (map-tensor (compose #'bool->int #'(lambda (e1 e2) (and (int->bool e1) (int->bool e2)))) tensor tensor2))
 
+(defmethod drop ((t1 tensor) (t2 tensor))
+    (labels ((rec (remove-list lst)
+                (if (eql (length remove-list) 1)
+                    (remove-element (car remove-list) lst)
+                    (let ((mod-lst (car remove-list) lst))
+                        (mapcar (curry #'auxilary-function (cdr remove-list)) mod-lst)))))
+        (make-instance 'tensor :initial-content (rec (tensor-content t1) (tensor-content t2)))))
+
 (defun reshape (tensor-dimensions tensor-content)
     (let ((counter 0))
         (labels ((rec (dimensions content)
@@ -382,13 +343,15 @@
              (add-dim-1 (tensor)
                 (reshape (apply #'v (append (tensor-content (shape tensor)) (list 1)))
                          (make-instance 'tensor :initial-content (flatten (tensor-content tensor))))))
-        (make-instance 'tensor
-                       :initial-content (cond ((eql (rank t1) (rank t2))
-                                                (append-elements-last-dim (tensor-content t1) (tensor-content t2)))
-                                              ((< (rank t1) (rank t2))
-                                                (append-elements-last-dim (add-dim-1 t1) (tensor-content t2)))
-                                              (t
-                                                (append-elements-last-dim (tensor-content t1) (add-dim-1 t2)))))))
+        (let ((r1 (car (tensor-content (rank t1))))
+              (r2 (car (tensor-content (rank t2)))))
+            (make-instance 'tensor
+                           :initial-content (cond ((eql r1 r2)
+                                                    (append-elements-last-dim (tensor-content t1) (tensor-content t2)))
+                                                  ((< r1 r2)
+                                                    (append-elements-last-dim (add-dim-1 t1) (tensor-content t2)))
+                                                  (t
+                                                    (append-elements-last-dim (tensor-content t1) (add-dim-1 t2))))))))
 
 (defmethod member? ((tensor tensor) (elements tensor))
     (map-tensor (compose #'bool->int
@@ -414,22 +377,13 @@
 
 (defun fold (fn)
     (lambda (tensor)
-        (reduce fn (mapcar #'s (tensor-content tensor)))))
+        (make-instance 'tensor :initial-content (tensor-content (reduce fn (mapcar #'s (tensor-content tensor)))))))
 
 (defun scan (fn)
   (lambda (tensor)
     (make-instance 'tensor :initial-content (reduce-subsets fn (mapcar #'s (tensor-content tensor)) 0 1))))
 
 " --------------------------- Dyadic Operators ------------------------------- "
-
-(defmethod drop ((t1 tensor) (t2 tensor))
-    (labels ((rec (remove-list lst)
-                (if (eql (length remove-list) 1)
-                    (remove-element (car remove-list) lst)
-                    (let ((mod-lst (car remove-list) lst))
-                        (mapcar (curry #'auxilary-function (cdr remove-list)) mod-lst)))))
-        (make-instance 'tensor :initial-content (rec (tensor-content t1) (tensor-content t2)))))
-
 
 (defun outer-product-aux (fn lst1 lst2)
   (let ((result-lst '()))
@@ -447,13 +401,15 @@
           (outer-product-aux fn (mapcar #'s (flatten (tensor-content tensor1)))
                                 (mapcar #'s (flatten (tensor-content tensor2)))))))))
 
-
 " ---------------------------- Exercises -------------------------------------- "
 
 (defun tally (tensor)
     (funcall (fold #'.*) (shape tensor)))
 
-(defun rank (tensor)
+(defmethod rank ((scalar scalar))
+    (s 0))
+
+(defmethod rank ((tensor tensor))
     (funcall (fold #'.+) (.< (s 0) (shape tensor))))
 
 (defun within (numbers inf sup)
