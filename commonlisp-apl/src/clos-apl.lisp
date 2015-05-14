@@ -22,6 +22,9 @@
         nil
         t))
 
+(defun scalar-to-real (scalar)
+  (car (tensor-content scalar)))
+
 ;;; Project implementation
 (defclass tensor ()
     ((data :type list
@@ -458,7 +461,7 @@
     (loop for i in lst1
       do (loop for j in lst2
         do (setf result-lst (append result-lst (list (funcall fn i j))))))
-  result-lst))
+  (map 'list #'scalar-to-real result-lst)))
 
 (defun outer-product (fn)
   (lambda (tensor1 tensor2)
@@ -538,5 +541,5 @@
     (reshape (tally tensor) tensor))
 
 (defun primes (index)
-  (let ((numbers (drop (s 1) (interval index))))
+  (let ((numbers (drop (s 1) (interval (car (tensor-content index))))))
     (select (.not (member? numbers (funcall (outer-product #'.*) numbers numbers))) numbers)))
