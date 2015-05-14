@@ -34,6 +34,12 @@
     (when (listp lst)
           (cons (length lst) (list-dimensions (car lst)))))
 
+(defun matrix? (tensor)
+    (> (first (tensor-content (rank tensor))) 1))
+
+(defun vector? (tensor)
+    (= (first (tensor-content (rank tensor))) 1))
+
 (defun remove-element (index list)
     (cond ((eql 0 index)
             list)
@@ -303,7 +309,7 @@
                 (if (eql (length remove-list) 1)
                     (remove-element (car remove-list) lst)
                     (let ((mod-lst (car remove-list) lst))
-                        (mapcar (curry #'auxilary-function (cdr remove-list)) mod-lst)))))
+                        (mapcar (curry #'rec (cdr remove-list)) mod-lst)))))
         (make-instance 'tensor :initial-content (rec (tensor-content t1) (tensor-content t2)))))
 
 (defun reshape (tensor-dimensions tensor-content)
@@ -408,23 +414,44 @@
     (labels ((number-columns (tensor)
                 (car (last (tensor-content (shape tensor)))))
              (number-lines (tensor)
-                (car (first (tensor-content (shape tensor))))))
+                (first (tensor-content (shape tensor))))
+             (apply-fn1 (line t1 t2)
+                (let ((columns '()))
+                    (dotimes (col-idx (number-columns t2))
+                        (setf columns (cons (reduce fn1 (apply-fn2 col-idx line t1 t2))
+                                            columns)))
+                    (reverse columns)))
+             (apply-fn2 (col-idx line t1 t2)
+                (let ((flat-t2 (flatten (tensor-content t2)))
+                      (result '()))
+                    (format t "line: ~A~%" line)
+                    (format t "flat-t2: ~A~%~%" flat-t2)
+                    (dotimes (elem-idx (number-columns t1))
+                        (format t "col-idx: ~A~%" col-idx)
+                        (format t "t1 elem: ~A~%" (nth elem-idx line))
+                        (format t "t2 elem: ~A~%" (nth (+ col-idx (* elem-idx (number-columns t2))) flat-t2))
+                        (setf result (cons (funcall fn2
+                                                    (nth elem-idx line)
+                                                    (nth (+ col-idx (* elem-idx (number-columns t2))) flat-t2))
+                                     result)))
+                    (reverse result)))
+             (compute-matrix (t1 t2)
+                (mapcar (lambda (line)
+                            (apply-fn1 line t1 t2))
+                        (tensor-content t1))))
         (lambda (t1 t2)
-            (let ((flat-t2 (flatten t2)))
-                (map-tensor (lambda (lst)
-                                (let ((columns '()))
-                                    (dotimes (col-idx (number-columns t2))
-                                        (let ((result '()))
-                                            (dotimes (elem-idx (number-lines t1))
-                                                (setf result (cons (funcall fn2
-                                                                            (nth elem-idx lst)
-                                                                            (nth (+ col-idx (* elem-idx (number-columns t2))) flat-t2))
-                                                                    result)))
-                                        (setf columns (cons (reduce fn1 (reverse result))
-                                                            columns))))
-                                    (reverse columns)))
-
-                            t1)))))
+            (make-instance 'tensor
+                    :initial-content (cond ((and (vector? t1) (vector? t2)))
+                                           ((and (vector? t1) (matrix? t2))
+                                             (compute-matrix (reshape (apply #'v (append (list 1) (tensor-content (shape t1))))
+                                                                      t1)
+                                                             t2))
+                                           ((and (matrix? t1) (vector? t2))
+                                             (compute-matrix t1
+                                                             (reshape (apply #'v (append (tensor-content (shape t2)) (list 1)))
+                                                                      t2)))
+                                           (t
+                                             (compute-matrix t1 t2)))))))
 
 " ---------------------------- Exercises -------------------------------------- "
 
