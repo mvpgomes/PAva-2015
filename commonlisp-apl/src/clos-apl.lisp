@@ -202,6 +202,9 @@
      where the function not is applied element-wise."
     (map-tensor #'(lambda (x) (if (> x 0) 0 1)) tensor))
 
+(defmethod shape ((scalar scalar))
+    (make-instance 'tensor :initial-content '()))
+
 (defmethod shape ((tensor tensor))
     " - shape : tensor -> tensor : receives a tensor and return a new tensor
      that contains the length of each dimension of the tensor."
@@ -442,7 +445,7 @@
       (reshape (make-instance 'tensor :initial-content (append row-dim col-dim))
         (make-instance 'tensor :initial-content
           (outer-product-aux fn (mapcar #'s (flatten (tensor-content tensor1)))
-                                (mapcar #'s(flatten (tensor-content tensor2)))))))))
+                                (mapcar #'s (flatten (tensor-content tensor2)))))))))
 
 
 " ---------------------------- Exercises -------------------------------------- "
