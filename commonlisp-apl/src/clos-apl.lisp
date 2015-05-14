@@ -1,14 +1,16 @@
-;;; Utility functions
-(defun compose (fn1 fn2)
-    "Composes two functions. It only works for the case where the arguments
-     passed to the resulting function belong to the second function."
-    (lambda (&rest args)
-        (funcall fn1 (apply fn2 args))))
+" ------------------------------- Classes ----------------------------------- "
+(defclass tensor ()
+  "Defines the class that represents a tensor. A tensor is a object that
+   contains a list that stores the elements of the tensor."
+    ((data :type list
+           :reader tensor-content
+           :initarg :initial-content)))
 
-(defun curry (fn &rest args)
-    (lambda (&rest more-args)
-        (apply fn (append args more-args))))
+(defclass scalar (tensor)
+  "Defines the class tha represents a scalar. A scalar is a tensor."
+  ())
 
+" ------------------------------- Utility Functions ------------------------- "
 (defun bool->int (bool)
     "Returns a number depending on the argument.
      If the argument is true, it returns 1.
@@ -17,54 +19,49 @@
         1
         0))
 
+(defun compose (fn1 fn2)
+    "Composes two functions. It only works for the case where the arguments
+     passed to the resulting function belong to the second function."
+    (lambda (&rest args)
+        (funcall fn1 (apply fn2 args))))
+
+(defun curry (fn &rest args)
+    "Curry a function that accepts multiple arguments into a series of functions that
+     accpets a part of the arguments."
+    (lambda (&rest more-args)
+        (apply fn (append args more-args))))
+
 (defun int->bool (int)
+    "Return a boolean (true or false) depending on the received argument. If
+    the argument (>= 0) is greater than 0 returns true, otherwise returns nil."
     (if (zerop int)
         nil
         t))
 
-(defun scalar-to-real (scalar)
-  (car (tensor-content scalar)))
+(defun flatten (arg)
+    "Linearize a list. Remove all nested parenthesis and return a list that contains
+    all the elements of the nested list."
+    (cond ((null arg)
+            nil)
+          ((atom (car arg))
+            (cons (car arg) (cdr arg)))
+          (t
+            (append (flatten (car arg)) (flatten (cdr arg))))))
 
-;;; Project implementation
-(defclass tensor ()
-    ((data :type list
-           :reader tensor-content
-           :initarg :initial-content)))
+(defun fold-tensor (function tensor initial-value)
+    (fold-tree function (tensor-content tensor) initial-value))
 
-(defclass scalar (tensor) ())
+(defun fold-tree (function list initial-value)
+    "Reduce the argument list by applying the function *function*. By default if the
+     argument list is empty returns the initial-value."
+    (reduce function (flatten list) :initial-value initial-value))
 
 (defun list-dimensions (lst)
+    "Returns the dimensions of a list. If the list isn't nested return a list that
+     contains the length of the list. Otherwise returns a list that contains the
+     dimensions of the sublists of the argument list."
     (when (listp lst)
           (cons (length lst) (list-dimensions (car lst)))))
-
-(defun scalar? (tensor)
-    (= (first (tensor-content (rank tensor))) 0))
-
-(defun vector? (tensor)
-    (= (first (tensor-content (rank tensor))) 1))
-
-(defun matrix? (tensor)
-    (> (first (tensor-content (rank tensor))) 1))
-
-(defun remove-element (index list)
-    (cond ((eql 0 index)
-            list)
-          ((eql 1 index)
-            (cdr list))
-          ((> index 0)
-            (cons (car list) (remove-element (- index 1) (cdr list))))
-          ((< index 0)
-            (remove-element (+ (- (length list) (- index)) 1) list))))
-
-(defun reduce-subsets (fn vector begin end)
-  (if (< (length vector) end)
-      nil
-   (cons (reduce fn vector :start begin :end end) (reduce-subsets fn vector begin (+ end 1)))))
-
-(defun scalar-to-tensor (scalar tensor)
-  (let* ((n (first (tensor-content scalar)))
-        (dim (list-length (tensor-content tensor))))
-    (make-instance 'tensor :initial-content (make-list dim :initial-element n))))
 
 (defun map-tensor (function &rest tensors)
     (make-instance 'tensor :initial-content (apply #'map-tree function (mapcar #'tensor-content tensors))))
@@ -82,19 +79,8 @@
                   (cons (apply #'map-tree function (mapcar #'car lists))
                         (apply #'map-tree function (mapcar #'cdr lists)))))))
 
-(defun fold-tensor (function tensor initial-value)
-    (fold-tree function (tensor-content tensor) initial-value))
-
-(defun flatten (arg)
-    (cond ((null arg)
-            nil)
-          ((atom (car arg))
-            (cons (car arg) (cdr arg)))
-          (t
-            (append (flatten (car arg)) (flatten (cdr arg))))))
-
-(defun fold-tree (function list initial-value)
-    (reduce function (flatten list) :initial-value initial-value))
+(defun matrix? (tensor)
+    (> (first (tensor-content (rank tensor))) 1))
 
 (defmethod print-object ((tensor tensor) (stream stream))
     "Implementation of the generic method print-object for the tensor data structure.
@@ -118,6 +104,47 @@
                           (format stream "~%")
                           (rec (cdr arg) last-iteration)))))
         (rec (tensor-content tensor) t)))
+
+(defun reduce-subsets (fn lst begin end)
+   "Returns a list that contains the result of applying the function fn to all
+   sub-sets of the list."
+  (if (< (length lst) end)
+      nil
+   (cons (reduce fn lst :start begin :end end) (reduce-subsets fn lst begin (+ end 1)))))
+
+(defun remove-element (index list)
+   "Returns a list without the element that is placed at index *index*
+    at the original list."
+    (cond ((eql 0 index)
+            list)
+          ((eql 1 index)
+            (cdr list))
+          ((> index 0)
+            (cons (car list) (remove-element (- index 1) (cdr list))))
+          ((< index 0)
+            (remove-element (+ (- (length list) (- index)) 1) list))))
+
+(defun scalar? (tensor)
+   "Receives a tensor and returns true if the tensor is a scalar. Otherwise
+    returns false."
+    (= (first (tensor-content (rank tensor))) 0))
+
+(defun scalar-to-real (scalar)
+   "Receives a scalar and returns the value of the scalar."
+  (car (tensor-content scalar)))
+
+(defun scalar-to-tensor (scalar tensor)
+   "Receives a tensor (a vector) and a scalar and returns a new tensor with the dimension
+    of the argument tensor. The new tensor is populated with the value of the
+    argument scalar."
+  (let* ((n (first (tensor-content scalar)))
+        (dim (list-length (tensor-content tensor))))
+    (make-instance 'tensor :initial-content (make-list dim :initial-element n))))
+
+(defun vector? (tensor)
+    "Receives a tensor and returns true if the tensor is a vector. Otherwise
+     returns false."
+    (= (first (tensor-content (rank tensor))) 1))
 
 " --------------------------- Tensor Constructors ---------------------------- "
 
@@ -369,6 +396,9 @@
                                                             (scalar-to-tensor scalar tensor)))
 
 (defmethod drop ((t1 tensor) (t2 tensor))
+   "Accepts a scalar n1 or vector (of elements ni) and a non-scalar tensor and returns a tensor
+    where the first (if n > 0) or last (if n < 0) n elements of the i dimension of the tensor
+    were removed."
     (labels ((rec (remove-list lst)
                 (if (eql (length remove-list) 1)
                     (remove-element (car remove-list) lst)
@@ -377,6 +407,8 @@
         (make-instance 'tensor :initial-content (rec (tensor-content t1) (tensor-content t2)))))
 
 (defun reshape (tensor-dimensions tensor-content)
+    "Returns a tensor with the dimensions refered in the first argument, whose elements are taken
+     from the second argument, repeating them if necessary to fill the resulting tensor."
     (let ((counter 0))
         (labels ((rec (dimensions content)
                     (cond ((null (cdr dimensions))
@@ -394,6 +426,7 @@
                                                          (flatten (tensor-content tensor-content)))))))
 
 (defmethod catenate ((s1 scalar) (s2 scalar))
+    "Returns a tensor containing the concatenated values of the arguments scalars."
     (make-instance 'tensor
                    :initial-content (list (first (tensor-content s1)) (first (tensor-content s2)))))
 
@@ -404,6 +437,7 @@
     (catenate tensor (reshape (shape tensor) scalar)))
 
 (defmethod catenate ((t1 tensor) (t2 tensor))
+    "Returns a tensor that joins the arguments along their last dimension."
     (labels ((append-elements-last-dim (list1 list2)
                 (cond ((null list1)
                         nil)
@@ -426,6 +460,9 @@
                                                     (append-elements-last-dim (tensor-content t1) (add-dim-1 t2))))))))
 
 (defun member? (tensor elements)
+    "Returns a tensor of booleans with the same shape and dimension of the first argument,
+     containing 1 for each element in the corresponding location in the first argument that
+     occurs somewhere in the second argument and 0 otherwise."
     (map-tensor (compose #'bool->int
                          (lambda (tensor-elem)
                             (fold-tensor (lambda (acc elem)
@@ -435,6 +472,9 @@
                 tensor))
 
 (defun select (filter-tensor elements-tensor)
+    "From a tensor of booleans and another tensor, returns a tensor contain- ing only the
+     elements of the last dimension of the second argument whose corresponding element in
+     the first tensor is 1."
     (labels ((rec (filter elements)
                 (cond ((null elements)
                         nil)
@@ -449,32 +489,42 @@
 " ---------------------------- Monadic Operators ----------------------------- "
 
 (defun fold (fn)
+    "Accepts a function and returns another function that, given a vector, com- putes the
+     application of the function to sucessive elements of the vector."
     (lambda (tensor)
         (make-instance 'tensor :initial-content (tensor-content (reduce fn (mapcar #'s (tensor-content tensor)))))))
 
 (defun scan (fn)
-  (lambda (tensor)
-    (make-instance 'tensor :initial-content (reduce-subsets fn (mapcar #'s (tensor-content tensor)) 0 1))))
+    "Similar to fold but using increasingly large subsets of the elements of the vector,
+    starting from a subset containing just the first element up to a subset containing all elements."
+    (lambda (tensor)
+      (make-instance 'tensor :initial-content (reduce-subsets fn (mapcar #'s (tensor-content tensor)) 0 1))))
 
 (defun outer-product-aux (fn lst1 lst2)
-  (let ((result-lst '()))
-    (loop for i in lst1
-      do (loop for j in lst2
-        do (setf result-lst (append result-lst (list (funcall fn i j))))))
-  (map 'list #'scalar-to-real result-lst)))
+    (let ((result-lst '()))
+      (loop for i in lst1
+        do (loop for j in lst2
+          do (setf result-lst (append result-lst (list (funcall fn i j))))))
+    (map 'list #'scalar-to-real result-lst)))
 
 (defun outer-product (fn)
-  (lambda (tensor1 tensor2)
-    (let ((row-dim (tensor-content (shape tensor1)))
-          (col-dim (tensor-content (shape tensor2))))
-      (reshape (make-instance 'tensor :initial-content (append row-dim col-dim))
-        (make-instance 'tensor :initial-content
-          (outer-product-aux fn (mapcar #'s (flatten (tensor-content tensor1)))
-                                (mapcar #'s (flatten (tensor-content tensor2)))))))))
+    "Accepts a function and returns another functions that, given two tensors, returns a
+    new tensor with the result of applying the function to every combination of values from the
+    first and second tensors."
+    (lambda (tensor1 tensor2)
+      (let ((row-dim (tensor-content (shape tensor1)))
+            (col-dim (tensor-content (shape tensor2))))
+            (reshape (make-instance 'tensor :initial-content (append row-dim col-dim))
+                      (make-instance 'tensor :initial-content
+                        (outer-product-aux fn (mapcar #'s (flatten (tensor-content tensor1)))
+                                              (mapcar #'s (flatten (tensor-content tensor2)))))))))
 
 " --------------------------- Dyadic Operators ------------------------------- "
 
 (defun inner-product (fn1 fn2)
+    "Accepts two functions and returns a function that, given two tensors, returns a new tensor
+    computed according to the rules of the algebraic inner product but replacing the algebraic
+    sum and product with the first and second functions."
     (labels ((number-columns (tensor)
                 (car (last (tensor-content (shape tensor)))))
              (number-lines (tensor)
@@ -526,20 +576,27 @@
 " ---------------------------- Exercises -------------------------------------- "
 
 (defun tally (tensor)
+    "Returns a scalar with the number of elements of the tensor."
     (funcall (fold #'.*) (shape tensor)))
 
 (defmethod rank ((scalar scalar))
     (s 0))
 
 (defmethod rank ((tensor tensor))
+    "Returns a scalar with the number of dimensions of the tensor."
     (funcall (fold #'.+) (.< (s 0) (shape tensor))))
 
 (defun within (numbers inf sup)
+    "Given a vector of numbers *numbers* and two numbers inf and sup, returns
+     a vector containing only the elements of *numbers* that are in the range
+     between inf and sup."
     (select (.and (.>= numbers inf) (.<= numbers sup)) numbers))
 
 (defun ravel (tensor)
+    "Returns a vector containing all the elements of the tensor."
     (reshape (tally tensor) tensor))
 
 (defun primes (index)
-  (let ((numbers (drop (s 1) (interval (car (tensor-content index))))))
-    (select (.not (member? numbers (funcall (outer-product #'.*) numbers numbers))) numbers)))
+    "Returns a vector with all prime numbers from 2 up to the scalar, inclusive."
+    (let ((numbers (drop (s 1) (interval (car (tensor-content index))))))
+      (select (.not (member? numbers (funcall (outer-product #'.*) numbers numbers))) numbers)))
