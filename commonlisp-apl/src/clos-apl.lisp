@@ -294,9 +294,11 @@
     "Creates a tensor using the relation \"less or equal than\" on the corresponding
      elements of the argument tensors. The result tensor will have, as elements,
      the integers 0 or 1."
-    (map-tensor (compose #'bool->int #'(lambda (e1 e2) (and (int->bool e1) (int->bool e2)))) tensor tensor2))
+    (map-tensor (compose #'bool->int #'(lambda (e1 e2) (and (int->bool e1) (int->bool e2))))
+                tensor
+                tensor2))
 
-(defmethod drop ((t1 tensor) (t2 tensor))
+(defun drop (t1 t2)
     (labels ((rec (remove-list lst)
                 (if (eql (length remove-list) 1)
                     (remove-element (car remove-list) lst)
@@ -353,15 +355,16 @@
                                                   (t
                                                     (append-elements-last-dim (tensor-content t1) (add-dim-1 t2))))))))
 
-(defmethod member? ((tensor tensor) (elements tensor))
+(defun member? (tensor elements)
     (map-tensor (compose #'bool->int
                          (lambda (tensor-elem)
-                            (fold-tensor (lambda (elem acc) (or (eql tensor-elem elem) acc))
+                            (fold-tensor (lambda (acc elem)
+                                            (or acc (eql tensor-elem elem)))
                                          elements
                                          nil)))
                 tensor))
 
-(defmethod select ((filter-tensor tensor) (elements-tensor tensor))
+(defun select (filter-tensor elements-tensor)
     (labels ((rec (filter elements)
                 (cond ((null elements)
                         nil)
@@ -383,8 +386,6 @@
   (lambda (tensor)
     (make-instance 'tensor :initial-content (reduce-subsets fn (mapcar #'s (tensor-content tensor)) 0 1))))
 
-" --------------------------- Dyadic Operators ------------------------------- "
-
 (defun outer-product-aux (fn lst1 lst2)
   (let ((result-lst '()))
     (loop for i in lst1
@@ -400,6 +401,30 @@
         (make-instance 'tensor :initial-content
           (outer-product-aux fn (mapcar #'s (flatten (tensor-content tensor1)))
                                 (mapcar #'s (flatten (tensor-content tensor2)))))))))
+
+" --------------------------- Dyadic Operators ------------------------------- "
+
+(defun inner-product (fn1 fn2)
+    (labels ((number-columns (tensor)
+                (car (last (tensor-content (shape tensor)))))
+             (number-lines (tensor)
+                (car (first (tensor-content (shape tensor))))))
+        (lambda (t1 t2)
+            (let ((flat-t2 (flatten t2)))
+                (map-tensor (lambda (lst)
+                                (let ((columns '()))
+                                    (dotimes (col-idx (number-columns t2))
+                                        (let ((result '()))
+                                            (dotimes (elem-idx (number-lines t1))
+                                                (setf result (cons (funcall fn2
+                                                                            (nth elem-idx lst)
+                                                                            (nth (+ col-idx (* elem-idx (number-columns t2))) flat-t2))
+                                                                    result)))
+                                        (setf columns (cons (reduce fn1 (reverse result))
+                                                            columns))))
+                                    (reverse columns)))
+
+                            t1)))))
 
 " ---------------------------- Exercises -------------------------------------- "
 
