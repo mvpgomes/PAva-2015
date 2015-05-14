@@ -34,11 +34,14 @@
     (when (listp lst)
           (cons (length lst) (list-dimensions (car lst)))))
 
-(defun matrix? (tensor)
-    (> (first (tensor-content (rank tensor))) 1))
+(defun scalar? (tensor)
+    (= (first (tensor-content (rank tensor))) 0))
 
 (defun vector? (tensor)
     (= (first (tensor-content (rank tensor))) 1))
+
+(defun matrix? (tensor)
+    (> (first (tensor-content (rank tensor))) 1))
 
 (defun remove-element (index list)
     (cond ((eql 0 index)
@@ -473,10 +476,18 @@
                 (car (last (tensor-content (shape tensor)))))
              (number-lines (tensor)
                 (first (tensor-content (shape tensor))))
-             (tensor1->matrix (tensor)
+             (scalar->matrix (tensor size)
+                (let ((result '())
+                      (num (car (tensor-content tensor))))
+                    (dotimes (i size)
+                        (dotimes (j size)
+                            (setf result (cons (if (eql i j) num 0)
+                                               result))))
+                    (reshape (v size size) (apply #'v (reverse result)))))
+             (vec1->matrix (tensor)
                 (reshape (apply #'v (append (list 1) (tensor-content (shape tensor))))
                          tensor))
-             (tensor2->matrix (tensor)
+             (vec2->matrix (tensor)
                 (reshape (apply #'v (append (tensor-content (shape tensor)) (list 1)))
                          tensor))
              (apply-fn1 (line t1 t2)
@@ -499,15 +510,15 @@
                             (apply-fn1 line t1 t2))
                         (tensor-content t1))))
         (lambda (t1 t2)
-            (make-instance 'tensor
-                    :initial-content (cond ((and (vector? t1) (vector? t2))
-                                             (compute-matrix (tensor1->matrix t1) (tensor2->matrix t2)))
-                                           ((and (vector? t1) (matrix? t2))
-                                             (compute-matrix (tensor1->matrix t1) t2))
-                                           ((and (matrix? t1) (vector? t2))
-                                             (compute-matrix t1 (tensor2->matrix t2)))
-                                           (t
-                                             (compute-matrix t1 t2)))))))
+            (make-instance
+                'tensor
+                :initial-content (let ((mod-t1 (cond ((scalar? t1) (scalar->matrix t1 (number-lines t2)))
+                                                     ((vector? t1) (vec1->matrix t1))
+                                                     (t t1)))
+                                       (mod-t2 (cond ((scalar? t2) (scalar->matrix t2 (number-columns t1)))
+                                                     ((vector? t2) (vec2->matrix t2))
+                                                     (t t2))))
+                                    (compute-matrix mod-t1 mod-t2))))))
 
 " ---------------------------- Exercises -------------------------------------- "
 
