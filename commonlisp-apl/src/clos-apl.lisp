@@ -1,15 +1,38 @@
 " ------------------------------- Classes ----------------------------------- "
 
-"Defines the class that represents a tensor. A tensor is a object that
+"Defines the class that represents a tensor. A tensor is an object that
  contains a list that stores the elements of the tensor."
 (defclass tensor ()
     ((data :type list
            :reader tensor-content
            :initarg :initial-content)))
 
-"Defines the class tha represents a scalar. A scalar is a tensor."
+"Defines the class that represents a scalar. A scalar is a subclass of tensor."
 (defclass scalar (tensor)
   ())
+
+(defmethod print-object ((tensor tensor) (stream stream))
+  "Implementation of the generic method print-object for the tensor data structure.
+   If the tensor is a vector, prints its elements separated by a whitespace.
+   If the tensor is not one of the previous cases, then for each sub-tensor of the
+   first dimension, prints the sub-tensor separated from the next sub-tensor by a
+   number of empty lines that is equal to the number of dimensions minus one."
+  (labels ((rec (arg last-iteration)
+              (cond ((null arg) nil)
+                    ((atom (car arg))
+                        (format stream
+                                (if (null (cdr arg)) "~A" "~A ")
+                                (car arg))
+                        (rec (cdr arg) nil))
+                    ((and (listp (car arg)) (null (cdr arg)))
+                        (rec (car arg) last-iteration)
+                        (unless last-iteration
+                          (format stream "~%")))
+                    (t
+                        (rec (car arg) nil)
+                        (format stream "~%")
+                        (rec (cdr arg) last-iteration)))))
+      (rec (tensor-content tensor) t)))
 
 " ------------------------------- Utility Functions ------------------------- "
 (defun bool->int (bool)
@@ -20,6 +43,13 @@
         1
         0))
 
+(defun int->bool (int)
+    "Returns a boolean (true or false) depending on the argument. If
+     the argument is greater than 0, it returns true, otherwise returns nil."
+    (if (zerop int)
+        nil
+        t))
+
 (defun compose (fn1 fn2)
     "Composes two functions. It only works for the case where the arguments
      passed to the resulting function belong to the second function."
@@ -27,21 +57,13 @@
         (funcall fn1 (apply fn2 args))))
 
 (defun curry (fn &rest args)
-    "Curry a function that accepts multiple arguments into a series of functions that
-     accpets a part of the arguments."
+    "Returns a function that already has some arguments applied."
     (lambda (&rest more-args)
         (apply fn (append args more-args))))
 
-(defun int->bool (int)
-    "Return a boolean (true or false) depending on the received argument. If
-    the argument (>= 0) is greater than 0 returns true, otherwise returns nil."
-    (if (zerop int)
-        nil
-        t))
-
 (defun flatten (arg)
-    "Linearize a list. Remove all nested parenthesis and return a list that contains
-    all the elements of the nested list."
+    "Returns a list without nested lists. The elements of the nested lists are inserted in order in
+     the result list."
     (cond ((null arg)
             nil)
           ((atom (car arg))
@@ -49,26 +71,28 @@
           (t
             (append (flatten (car arg)) (flatten (cdr arg))))))
 
-(defun fold-tensor (function tensor initial-value)
-    (fold-tree function (tensor-content tensor) initial-value))
-
-(defun fold-tree (function list initial-value)
-    "Reduce the argument list by applying the function *function*. By default if the
-     argument list is empty returns the initial-value."
-    (reduce function (flatten list) :initial-value initial-value))
-
 (defun list-dimensions (lst)
-    "Returns the dimensions of a list. If the list isn't nested return a list that
-     contains the length of the list. Otherwise returns a list that contains the
+    "Returns the dimensions of a list. If the list does not contain nested lists, it returns a list
+     that contains the length of the argument list,oOtherwise returns a list that contains the
      dimensions of the sublists of the argument list."
     (when (listp lst)
           (cons (length lst) (list-dimensions (car lst)))))
 
+(defun fold-tensor (function tensor initial-value)
+    "Applies the fold-tree function to the contents of the tensor."
+    (fold-tree function (tensor-content tensor) initial-value))
+
+(defun fold-tree (function list initial-value)
+    "Applies the reduce function in the flatten list. If the
+     argument list is empty, the initial value is returned."
+    (reduce function (flatten list) :initial-value initial-value))
+
 (defun map-tensor (function &rest tensors)
+    "Applies the map-tree function to the contents of the tensors."
     (make-instance 'tensor :initial-content (apply #'map-tree function (mapcar #'tensor-content tensors))))
 
 (defun map-tree (function &rest lists)
-    "Maps the function over the lists.
+    "Applies the function over the elements of the lists, even if there are nested lists.
      Assumes that all lists are of the same dimensions.
      Returns a new list of the same dimension."
     (let ((lst (car lists)))
@@ -80,42 +104,17 @@
                   (cons (apply #'map-tree function (mapcar #'car lists))
                         (apply #'map-tree function (mapcar #'cdr lists)))))))
 
-(defun matrix? (tensor)
-    (> (first (tensor-content (rank tensor))) 1))
-
-(defmethod print-object ((tensor tensor) (stream stream))
-    "Implementation of the generic method print-object for the tensor data structure.
-     If the tensor is a vector, prints its elements separated by a whitespace.
-     If the tensor is not one of the previous cases, then for each sub-tensor of the
-     first dimension, prints the sub-tensor separated from the next sub-tensor by a
-     number of empty lines that is equal to the number of dimensions minus one."
-    (labels ((rec (arg last-iteration)
-                (cond ((null arg) nil)
-                      ((atom (car arg))
-                          (format stream
-                                  (if (null (cdr arg)) "~A" "~A ")
-                                  (car arg))
-                          (rec (cdr arg) nil))
-                      ((and (listp (car arg)) (null (cdr arg)))
-                          (rec (car arg) last-iteration)
-                          (unless last-iteration
-                            (format stream "~%")))
-                      (t
-                          (rec (car arg) nil)
-                          (format stream "~%")
-                          (rec (cdr arg) last-iteration)))))
-        (rec (tensor-content tensor) t)))
-
 (defun reduce-subsets (fn lst begin end)
-   "Returns a list that contains the result of applying the function fn to all
-   sub-sets of the list."
-  (if (< (length lst) end)
-      nil
-   (cons (reduce fn lst :start begin :end end) (reduce-subsets fn lst begin (+ end 1)))))
+    "Returns a list that contains the result of applying the function fn to all
+     subsets of the list."
+    (if (< (length lst) end)
+        nil
+        (cons (reduce fn lst :start begin :end end) (reduce-subsets fn lst begin (+ end 1)))))
 
 (defun remove-element (index list)
-   "Returns a list without the element that is placed at index *index*
-    at the original list."
+    "Returns a list without the element that is placed at index *index* at the original list.
+     The index either starts at 1 or -1, where 1 corresponds to the first element of the list and
+     -1 means corresponds to the last element of the list."
     (cond ((eql 0 index)
             list)
           ((eql 1 index)
@@ -125,86 +124,91 @@
           ((< index 0)
             (remove-element (+ (- (length list) (- index)) 1) list))))
 
-(defun scalar? (tensor)
-   "Receives a tensor and returns true if the tensor is a scalar. Otherwise
-    returns false."
-    (= (first (tensor-content (rank tensor))) 0))
-
 (defun scalar-to-real (scalar)
-   "Receives a scalar and returns the value of the scalar."
-  (car (tensor-content scalar)))
+    "Receives a scalar and returns the value of the scalar."
+    (car (tensor-content scalar)))
 
 (defun scalar-to-tensor (scalar tensor)
-   "Receives a tensor (a vector) and a scalar and returns a new tensor with the dimension
-    of the argument tensor. The new tensor is populated with the value of the
-    argument scalar."
-  (let* ((n (first (tensor-content scalar)))
-        (dim (list-length (tensor-content tensor))))
-    (make-instance 'tensor :initial-content (make-list dim :initial-element n))))
+    "Receives a scalar and a tensor and returns a new tensor with the dimension
+     of the argument tensor. The new tensor is populated with the value of the
+     argument scalar."
+    (reshape (shape tensor) scalar))
+
+(defun scalar? (tensor)
+    "Receives a tensor and returns true if the tensor is a scalar, otherwise returns false."
+    (= (first (tensor-content (rank tensor))) 0))
 
 (defun vector? (tensor)
-    "Receives a tensor and returns true if the tensor is a vector. Otherwise
-     returns false."
+    "Receives a tensor and returns true if the tensor is a vector, otherwise returns false."
     (= (first (tensor-content (rank tensor))) 1))
+
+(defun matrix? (tensor)
+    "Receives a tensor and returns true if the tensor is a matrix, otherwise returns false."
+    (> (first (tensor-content (rank tensor))) 1))
 
 " --------------------------- Tensor Constructors ---------------------------- "
 
-" - s : element -> tensor : receives a parameter and returns a scalar."
-(defun s (element) (make-instance 'scalar :initial-content (list element)))
+(defun s (element)
+    "Receives an element and returns a scalar with that element."
+    (make-instance 'scalar :initial-content (list element)))
 
-" - v : element -> tensor : receives a parameter list and returns a vector."
-(defun v (&rest elements) (make-instance 'tensor :initial-content elements))
+(defun v (&rest elements)
+    "Receives zero or more elements and returns a tensor with those elements."
+    (make-instance 'tensor :initial-content elements))
 
 " ---------------------------- Monadic Functions ----------------------------- "
 
-(defmethod .- (tensor &optional tensor2)
-    "Creates a new tensor whose elements are the symmetic of the corresponding
-     elements of the argument tensor."
-     (if tensor2
-         (subtract tensor tensor2)
-         (symmetric tensor)))
+(defun .- (tensor &optional tensor2)
+    "Creates a new tensor whose elements are the symmetric of the corresponding elements of the
+     argument tensor."
+    (if tensor2
+        (subtract tensor tensor2)
+        (symmetric tensor)))
 
-(defmethod symmetric ((tensor tensor))
+(defun symmetric (tensor)
     (map-tensor #'- tensor))
 
-(defmethod subtract ((tensor1 tensor) (tensor2 tensor))
-    (map-tensor #'- tensor1 tensor2))
-
-(defmethod ./ ((tensor tensor) &optional (tensor2 tensor))
+(defun ./ (tensor &optional tensor2)
     "Creates a new tensor whose elements are the inverse of the corresponding
      elements of the argument tensor."
-    (map-tensor #'/ tensor tensor2))
+    (if tensor2
+        (division tensor tensor2)
+        (inverse tensor)))
+
+(defun inverse (tensor)
+    (map-tensor #'/ tensor))
 
 (defmethod .! ((tensor tensor))
-    " - .! : tensor -> tensor : receives a tensor and returns a new tensor
-     where the function factorial is applied element-wise."
+    "Receives a tensor and returns a new tensor where the function factorial is applied
+     element-wise."
     (map-tensor #'! tensor))
 
 (defmethod .sin ((tensor tensor))
-    " - .sin : tensor -> tensor : receives a tensor and returns a new tensor
-     where the function sin is applied element-wise. "
+    "Receives a tensor and returns a new tensor where the function sin is applied element-wise."
     (map-tensor #'sin tensor))
 
 (defmethod .cos ((tensor tensor))
-    "Creates a new tensor whose elements are the result of applying the cos
-     function to the corresponding elements of the argument tensor."
+    "Creates a new tensor whose elements are the result of applying the cos function to the
+     corresponding elements of the argument tensor."
     (map-tensor #'cos tensor))
 
 (defmethod .not ((tensor tensor))
-    " - .not : tensor -> tensor : receives a tensor and returns a new tensor
-     where the function not is applied element-wise."
-    (map-tensor #'(lambda (x) (if (> x 0) 0 1)) tensor))
+    "Receives a tensor and returns a new tensor where the function not is applied element-wise."
+    (map-tensor #'(lambda (x) (if (> x 0) 0 1))
+                tensor))
 
 (defmethod shape ((scalar scalar))
+    "Receives a scalar and returns a new tensor that contains an empty list because a scalar has 0
+     dimensions."
     (make-instance 'tensor :initial-content '()))
 
 (defmethod shape ((tensor tensor))
-    " - shape : tensor -> tensor : receives a tensor and return a new tensor
-     that contains the length of each dimension of the tensor."
-     (make-instance 'tensor :initial-content (list-dimensions (tensor-content tensor))))
+    "Receives a tensor and returns a new tensor that contains the length of each dimension of the
+     argument tensor."
+    (make-instance 'tensor :initial-content (list-dimensions (tensor-content tensor))))
 
 (defun interval (n)
-    "Creates a vector containing an enumeration of all integers starting
+    "Returns a tensor containing an enumeration of all integers starting
      from 1 up to the argument."
     (labels ((rec (i n)
                 (unless (> i n)
@@ -214,193 +218,222 @@
 " ---------------------------- Dyadic Functions ----------------------------- "
 
 (defmethod .+ ((tensor tensor) (tensor2 tensor))
-    "Creates a tensor with the sum of the corresponding elements of the argument
-     tensors."
+    "Returns a tensor with the sum of the corresponding elements of the argument tensors."
     (map-tensor #'+ tensor tensor2))
 
 (defmethod .+ ((scalar scalar) (tensor tensor))
-    "Creates a tensor with the sum of the corresponding elements of the scalar and
-     the argument tensor."
+    "Returns a tensor with the sum of the corresponding elements of the scalar and the argument
+     tensor."
     (map-tensor #'+ (scalar-to-tensor scalar tensor) tensor))
 
 (defmethod .+ ((tensor tensor) (scalar scalar))
-    "Creates a tensor with the sum of the corresponding elements of the argument
-     tensor and the scalar."
+    "Returns a tensor with the sum of the corresponding elements of the argument tensor and the
+     scalar."
     (map-tensor #'+ tensor (scalar-to-tensor scalar tensor)))
 
-(defmethod .% ((tensor tensor) (tensor2 tensor))
-    " - .% : tensor, tensor -> tensor : receives two tensors and return a new tensor
-      that contains the remainder between the elements of the tensors."
-    (map-tensor #'rem tensor tensor2))
+(defmethod subtract ((tensor1 tensor) (tensor2 tensor))
+    "Returns a tensor with the subtraction of the corresponding elements of the argument tensors."
+    (map-tensor #'- tensor1 tensor2))
 
-(defmethod .% ((scalar scalar) (tensor tensor))
-    " - .% : scalar, tensor -> tensor : receives two tensors and return a new tensor that
-      contains the remainder between the scalar and the elements of the tensor."
-    (map-tensor #'rem (scalar-to-tensor scalar tensor) tensor))
+(defmethod subtract ((scalar scalar) (tensor tensor))
+    "Returns a tensor with the subtraction of the corresponding elements of the scalar and the
+     argument tensor."
+    (map-tensor #'- (scalar-to-tensor scalar tensor) tensor))
 
-(defmethod .% ((tensor tensor) (scalar scalar))
-  " - .% : tensor, scalar -> tensor : receives two tensors and return a new tensor that contains the
-    remainder between the elements of the tensor and the scalar."
-    (map-tensor #'rem tensor (scalar-to-tensor scalar tensor)))
-
-(defmethod .> ((tensor tensor) (tensor2 tensor))
-  " - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
-    result of the comparsion (greater then) between the elements of the tensors."
-    (map-tensor (compose #'bool->int #'>) tensor tensor2))
-
-(defmethod .> ((scalar scalar) (tensor tensor))
-  " - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
-    result of the comparsion (greater then) between the scalar and the elements of the tensor."
-    (map-tensor (compose #'bool->int #'>) (scalar-to-tensor scalar tensor) tensor))
-
-(defmethod .> ((tensor tensor) (scalar scalar))
-  " - .> : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
-    result of the comparsion (greater then) between the elements of the tensor and the scalar."
-    (map-tensor (compose #'bool->int #'>) tensor (scalar-to-tensor scalar tensor)))
-
-(defmethod .>= ((tensor tensor) (tensor2 tensor))
-  " - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
-    result of the comparsion (greater equals then) between the elements of the tensors."
-    (map-tensor (compose #'bool->int #'>=) tensor tensor2))
-
-(defmethod .>= ((scalar scalar) (tensor tensor))
-  " - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
-    result of the comparsion (greater equals then) between the scalar and the elements of the tensor."
-    (map-tensor (compose #'bool->int #'>=) (scalar-to-tensor scalar tensor) tensor))
-
-(defmethod .>= ((tensor tensor) (scalar scalar))
-  " - .>= : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
-    result of the comparsion (greater equals then) between the elements of the tensor and the scalar.."
-    (map-tensor (compose #'bool->int #'>=) tensor (scalar-to-tensor scalar tensor)))
-
-(defmethod .or ((tensor tensor) (tensor2 tensor))
-  " - .or : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
-    result of the logical comparsion (or) between the elements of the tensors."
-    (map-tensor (compose #'bool->int (lambda (e1 e2) (or (int->bool e1) (int->bool e2)))) tensor tensor2))
-
-(defmethod .or ((scalar scalar) (tensor tensor))
-  " - .or : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
-    result of the logical comparsion (or) between the elements of the scalar and the tensor."
-    (map-tensor (compose #'bool->int (lambda (e1 e2) (or (int->bool e1) (int->bool e2))))
-                                                         (scalar-to-tensor scalar tensor) tensor))
-
-(defmethod .or ((tensor tensor) (scalar scalar))
-  " - .or : tensor, tensor -> tensor : receives two tensors and return a new tensor that contains the
-    result of the logical comparsion (or) between the elements of the tensor and the scalar."
-    (map-tensor (compose #'bool->int (lambda (e1 e2) (or (int->bool e1) (int->bool e2)))) tensor
-                                                         (scalar-to-tensor scalar tensor)))
+(defmethod subtract ((tensor tensor) (scalar scalar))
+    "Returns a tensor with the subtraction of the corresponding elements of the argument tensor and
+     the scalar."
+    (map-tensor #'- tensor (scalar-to-tensor scalar tensor)))
 
 (defmethod .* ((tensor tensor) (tensor2 tensor))
-    "Creates a tensor with the multiplication of the corresponding elements of
-     the argument tensors."
+    "Returns a tensor with the multiplication of the corresponding elements of the argument
+     tensors."
     (map-tensor #'* tensor tensor2))
 
 (defmethod .* ((scalar scalar) (tensor tensor))
-    "Creates a tensor with the multiplication of the corresponding elements of
-     the scalar and the argument tensor."
+    "Returns a tensor with the multiplication of the corresponding elements of the scalar and the
+     argument tensor."
     (map-tensor #'* (scalar-to-tensor scalar tensor) tensor))
 
 (defmethod .* ((tensor tensor) (scalar scalar))
-    "Creates a tensor with the multiplication of the corresponding elements of
-     the argument tensor and the scalar."
+    "Returns a tensor with the multiplication of the corresponding elements of the argument tensor
+     and the scalar."
     (map-tensor #'* tensor (scalar-to-tensor scalar tensor)))
 
+(defmethod division ((tensor1 tensor) (tensor2 tensor))
+    "Returns a tensor with the multiplication of the corresponding elements of the argument tensors."
+    (map-tensor #'/ tensor1 tensor2))
+
+(defmethod division ((scalar scalar) (tensor tensor))
+    "Returns a tensor with the multiplication of the corresponding elements of the scalar and the
+     argument tensor."
+    (map-tensor #'/ (scalar-to-tensor scalar tensor) tensor))
+
+(defmethod division ((tensor tensor) (scalar scalar))
+    "Returns a tensor with the division of the corresponding elements of the argument tensor and the
+     scalar."
+    (map-tensor #'/ tensor (scalar-to-tensor scalar tensor)))
+
 (defmethod .// ((tensor tensor) (tensor2 tensor))
-    "Creates a tensor with the integer division of the corresponding elements
+    "Returns a tensor with the integer division of the corresponding elements
      of the argument tensors."
     (map-tensor (lambda (e1 e2) (truncate (/ e1 e2))) tensor tensor2))
 
 (defmethod .// ((scalar scalar) (tensor tensor))
-    "Creates a tensor with the integer division of the corresponding elements
-     of the scalar and the argument tensor."
+    "Returns a tensor with the integer division of the scalar and the corresponding elements of the
+     argument tensor."
     (map-tensor (lambda (e1 e2) (truncate (/ e1 e2))) (scalar-to-tensor scalar tensor) tensor))
 
 (defmethod .// ((tensor tensor) (scalar scalar))
-    "Creates a tensor with the integer division of the corresponding elements
-    of the argument tensor and the scalar."
+    "Returns a tensor with the integer division of the corresponding elements of the argument tensor
+     and the scalar."
     (map-tensor (lambda (e1 e2) (truncate (/ e1 e2))) tensor (scalar-to-tensor scalar tensor)))
 
-(defmethod .< ((tensor tensor) (tensor2 tensor))
-    "Creates a tensor using the relation \"less than\" on the corresponding
-     elements of the argument tensors. The result tensor will have, as elements,
-     the integers 0 or 1."
-    (map-tensor (compose #'bool->int #'<) tensor tensor2))
+(defmethod .% ((tensor tensor) (tensor2 tensor))
+    "Receives two tensors and returns a new tensor that contains the remainder between the elements
+     of the tensors."
+    (map-tensor #'rem tensor tensor2))
 
-(defmethod .< ((scalar scalar) (tensor tensor))
-    "Creates a tensor using the relation \"less than\" on the corresponding
-    elements scalar and the argument tensor. The result tensor will have, as elements,
-    the integers 0 or 1."
-    (map-tensor (compose #'bool->int #'<) (scalar-to-tensor scalar tensor) tensor))
+(defmethod .% ((scalar scalar) (tensor tensor))
+    "Receives a scalar and a tensor and returns a new tensor that contains the remainder between the
+     scalar and the elements of the tensor."
+    (map-tensor #'rem (scalar-to-tensor scalar tensor) tensor))
 
-(defmethod .< ((tensor tensor) (scalar scalar))
-    "Creates a tensor using the relation \"less than\" on the corresponding
-    elements of the argument tensor and the scalar. The result tensor will have, as
-    elements, the integers 0 or 1."
-    (map-tensor (compose #'bool->int #'<) tensor (scalar-to-tensor scalar tensor)))
-
-(defmethod .<= ((tensor tensor) (tensor2 tensor))
-    "Creates a tensor using the relation \"less or equal than\" on the corresponding
-     elements of the argument tensors. The result tensor will have, as elements,
-     the integers 0 or 1."
-    (map-tensor (compose #'bool->int #'<=) tensor tensor2))
-
-(defmethod .<= ((scalar scalar) (tensor tensor))
-    "Creates a tensor using the relation \"less or equal than\" on the corresponding
-     elements scalar and the argument tensors. The result tensor will have, as elements,
-     the integers 0 or 1."
-    (map-tensor (compose #'bool->int #'<=) (scalar-to-tensor scalar tensor) tensor))
-
-(defmethod .<= ((tensor tensor) (scalar scalar))
-     "Creates a tensor using the relation \"less or equal than\" on the corresponding
-      elements of the argument tensors. The result tensor will have, as elements,
-      the integers 0 or 1."
-      (map-tensor (compose #'bool->int #'<=) tensor (scalar-to-tensor scalar tensor)))
-
-(defmethod .= ((tensor tensor) (tensor2 tensor))
-    "Creates a tensor using the relation \"less or equal than\" on the corresponding
-     elements of the argument tensors. The result tensor will have, as elements,
-     the integers 0 or 1."
-    (map-tensor (compose #'bool->int #'=) tensor tensor2))
-
-(defmethod .= ((tensor tensor) (scalar scalar))
-    "Creates a tensor using the relation \"less or equal than\" on the corresponding
-     elements of the argument tensor and the scalar. The result tensor will have,
-     as elements, the integers 0 or 1."
-    (map-tensor (compose #'bool->int #'=) tensor (scalar-to-tensor scalar tensor)))
-
-(defmethod .= ((scalar scalar) (tensor tensor))
-    "Creates a tensor using the relation \"less or equal than\" on the corresponding
-     elements of the scalar and the argument tensor. The result tensor will have,
-     as elements, the integers 0 or 1."
-    (map-tensor (compose #'bool->int #'=) (scalar-to-tensor scalar tensor) tensor))
+(defmethod .% ((tensor tensor) (scalar scalar))
+    "Receives a tensor and a scalar and returns a new tensor that contains the remainder between the
+     elements of the tensor and the scalar."
+    (map-tensor #'rem tensor (scalar-to-tensor scalar tensor)))
 
 (defmethod .and ((tensor tensor) (tensor2 tensor))
-    "Creates a tensor using the relation \"less or equal than\" on the corresponding
-     elements of the argument tensors. The result tensor will have, as elements,
-     the integers 0 or 1."
-    (map-tensor (compose #'bool->int #'(lambda (e1 e2) (and (int->bool e1) (int->bool e2))))
+    "Returns a tensor using the logical comparison (and) on the corresponding elements of the
+     argument tensors. The result tensor will have, as elements, the integers 0 or 1."
+    (map-tensor (compose #'bool->int
+                         (lambda (e1 e2) (and (int->bool e1) (int->bool e2))))
                 tensor
                 tensor2))
 
 (defmethod .and ((scalar scalar) (tensor tensor))
-    "Creates a tensor using the relation \"less or equal than\" on the corresponding
-     elements of scalar and the scalar and the argument tensor. The result tensor will have,
-     as elements, the integers 0 or 1."
-    (map-tensor (compose #'bool->int #'(lambda (e1 e2) (and (int->bool e1) (int->bool e2))))
-                                                            (scalar-to-tensor scalar tensor) tensor))
+    "Returns a tensor using the relation \"less or equal than\" on the corresponding elements of
+     scalar and the scalar and the argument tensor. The result tensor will have, as elements, the
+     integers 0 or 1."
+    (map-tensor (compose #'bool->int
+                         (lambda (e1 e2) (and (int->bool e1) (int->bool e2))))
+                (scalar-to-tensor scalar tensor)
+                tensor))
 
 (defmethod .and ((tensor tensor) (scalar scalar))
-    "Creates a tensor using the relation \"less or equal than\" on the corresponding
-     elements of the argument tensor and the scalar. The result tensor will have, as elements,
-     the integers 0 or 1."
-    (map-tensor (compose #'bool->int #'(lambda (e1 e2) (and (int->bool e1) (int->bool e2)))) tensor
-                                                            (scalar-to-tensor scalar tensor)))
+    "Returns a tensor using the relation \"less or equal than\" on the corresponding elements of the
+     argument tensor and the scalar. The result tensor will have, as elements, the integers 0 or 1."
+    (map-tensor (compose #'bool->int
+                         (lambda (e1 e2) (and (int->bool e1) (int->bool e2))))
+                tensor
+                (scalar-to-tensor scalar tensor)))
 
-(defmethod drop ((t1 tensor) (t2 tensor))
+(defmethod .or ((tensor tensor) (tensor2 tensor))
+    "Receives two tensors and returns a new tensor that contains the result of the logical
+     comparison (or) between the elements of the tensors."
+    (map-tensor (compose #'bool->int
+                         (lambda (e1 e2) (or (int->bool e1) (int->bool e2))))
+                tensor
+                tensor2))
+
+(defmethod .or ((scalar scalar) (tensor tensor))
+    "Receives a scalar and a tensor and returns a new tensor that contains the result of the logical
+     comparison (or) between the scalar and the elements of the tensor."
+    (map-tensor (compose #'bool->int
+                        (lambda (e1 e2) (or (int->bool e1) (int->bool e2))))
+                (scalar-to-tensor scalar tensor)
+                tensor))
+
+(defmethod .or ((tensor tensor) (scalar scalar))
+    "Receives a tensor and a scalar and returns a new tensor that contains the result of the logical
+     comparison (or) between the elements of the tensor and the scalar."
+    (map-tensor (compose #'bool->int
+                         (lambda (e1 e2) (or (int->bool e1) (int->bool e2))))
+                tensor
+                (scalar-to-tensor scalar tensor)))
+
+(defmethod .> ((tensor tensor) (tensor2 tensor))
+    "Receives two tensors and returns a new tensor that contains the result of the comparison
+     (greater than) between the elements of the tensors."
+    (map-tensor (compose #'bool->int #'>) tensor tensor2))
+
+(defmethod .> ((scalar scalar) (tensor tensor))
+    "Receives a scalar and a tensor and returns a new tensor that contains the result of the
+     comparison (greater than) between the scalar and the elements of the tensor."
+    (map-tensor (compose #'bool->int #'>) (scalar-to-tensor scalar tensor) tensor))
+
+(defmethod .> ((tensor tensor) (scalar scalar))
+    "Receives a tensor and a scalar and returns a new tensor that contains the result of the
+     comparison (greater than) between the elements of the tensor and the scalar."
+    (map-tensor (compose #'bool->int #'>) tensor (scalar-to-tensor scalar tensor)))
+
+(defmethod .>= ((tensor tensor) (tensor2 tensor))
+    "Receives two tensors and returns a new tensor that contains the result of the comparison
+     (greater or equal than) between the elements of the tensors."
+    (map-tensor (compose #'bool->int #'>=) tensor tensor2))
+
+(defmethod .>= ((scalar scalar) (tensor tensor))
+    "Receives a scalar and a tensor and returns a new tensor that contains the result of the
+     comparison (greater or equal than) between the scalar and the elements of the tensor."
+    (map-tensor (compose #'bool->int #'>=) (scalar-to-tensor scalar tensor) tensor))
+
+(defmethod .>= ((tensor tensor) (scalar scalar))
+    "Receives a tensor and a scalar and returns a new tensor that contains the result of the
+     comparison (greater or equal than) between the elements of the tensor and the scalar."
+    (map-tensor (compose #'bool->int #'>=) tensor (scalar-to-tensor scalar tensor)))
+
+(defmethod .= ((tensor tensor) (tensor2 tensor))
+    "Returns a tensor using the relation \"equal than\" on the corresponding elements of the
+     argument tensors. The result tensor will have, as elements, the integers 0 or 1."
+    (map-tensor (compose #'bool->int #'=) tensor tensor2))
+
+(defmethod .= ((scalar scalar) (tensor tensor))
+    "Returns a tensor using the relation \"equal than\" on the corresponding elements of the scalar
+     and the argument tensor. The result tensor will have, as elements, the integers 0 or 1."
+    (map-tensor (compose #'bool->int #'=) (scalar-to-tensor scalar tensor) tensor))
+
+(defmethod .= ((tensor tensor) (scalar scalar))
+    "Returns a tensor using the relation \"equal than\" on the corresponding elements of the
+     argument tensor and the scalar. The result tensor will have, as elements, the integers 0 or 1."
+    (map-tensor (compose #'bool->int #'=) tensor (scalar-to-tensor scalar tensor)))
+
+(defmethod .< ((tensor tensor) (tensor2 tensor))
+    "Returns a tensor using the relation \"less than\" on the corresponding elements of the argument
+     tensors. The result tensor will have, as elements, the integers 0 or 1."
+    (map-tensor (compose #'bool->int #'<) tensor tensor2))
+
+(defmethod .< ((scalar scalar) (tensor tensor))
+    "Returns a tensor using the relation \"less than\" on the corresponding elements scalar and the
+     argument tensor. The result tensor will have, as elements, the integers 0 or 1."
+    (map-tensor (compose #'bool->int #'<) (scalar-to-tensor scalar tensor) tensor))
+
+(defmethod .< ((tensor tensor) (scalar scalar))
+    "Returns a tensor using the relation \"less than\" on the corresponding elements of the argument
+     tensor and the scalar. The result tensor will have, as elements, the integers 0 or 1."
+    (map-tensor (compose #'bool->int #'<) tensor (scalar-to-tensor scalar tensor)))
+
+(defmethod .<= ((tensor tensor) (tensor2 tensor))
+    "Returns a tensor using the relation \"less or equal than\" on the corresponding elements of the
+     argument tensors. The result tensor will have, as elements, the integers 0 or 1."
+    (map-tensor (compose #'bool->int #'<=) tensor tensor2))
+
+(defmethod .<= ((scalar scalar) (tensor tensor))
+    "Returns a tensor using the relation \"less or equal than\" on the corresponding elements scalar
+     and the argument tensors. The result tensor will have, as elements, the integers 0 or 1."
+    (map-tensor (compose #'bool->int #'<=) (scalar-to-tensor scalar tensor) tensor))
+
+(defmethod .<= ((tensor tensor) (scalar scalar))
+     "Returns a tensor using the relation \"less or equal than\" on the corresponding
+      elements of the argument tensor and the scalar. The result tensor will have, as elements,
+      the integers 0 or 1."
+     (map-tensor (compose #'bool->int #'<=) tensor (scalar-to-tensor scalar tensor)))
+
+(defun drop (t1 t2)
    "Accepts a scalar n1 or vector (of elements ni) and a non-scalar tensor and returns a tensor
     where the first (if n > 0) or last (if n < 0) n elements of the i dimension of the tensor
-    were removed."
-    (labels ((rec (remove-list lst)
+    are removed."
+   (labels ((rec (remove-list lst)
                 (if (eql (length remove-list) 1)
                     (remove-element (car remove-list) lst)
                     (let ((mod-lst (car remove-list) lst))
@@ -408,8 +441,8 @@
         (make-instance 'tensor :initial-content (rec (tensor-content t1) (tensor-content t2)))))
 
 (defun reshape (tensor-dimensions tensor-content)
-    "Returns a tensor with the dimensions refered in the first argument, whose elements are taken
-     from the second argument, repeating them if necessary to fill the resulting tensor."
+    "Returns a tensor with the dimensions provided in the first argument and elements taken from the
+     second argument, repeating them as necessary to fill the resulting tensor."
     (let ((counter 0))
         (labels ((rec (dimensions content)
                     (cond ((null (cdr dimensions))
@@ -432,10 +465,10 @@
                    :initial-content (list (first (tensor-content s1)) (first (tensor-content s2)))))
 
 (defmethod catenate ((scalar scalar) (tensor tensor))
-    (catenate (reshape (shape tensor) scalar) tensor))
+    (catenate (scalar-to-tensor scalar tensor) tensor))
 
 (defmethod catenate ((tensor tensor) (scalar scalar))
-    (catenate tensor (reshape (shape tensor) scalar)))
+    (catenate tensor (scalar-to-tensor scalar tensor)))
 
 (defmethod catenate ((t1 tensor) (t2 tensor))
     "Returns a tensor that joins the arguments along their last dimension."
@@ -473,9 +506,8 @@
                 tensor))
 
 (defun select (filter-tensor elements-tensor)
-    "From a tensor of booleans and another tensor, returns a tensor contain- ing only the
-     elements of the last dimension of the second argument whose corresponding element in
-     the first tensor is 1."
+    "From a tensor of booleans and another tensor, returns a tensor containing only the elements of
+     the last dimension of the second argument whose corresponding element in the first tensor is 1."
     (labels ((rec (filter elements)
                 (cond ((null elements)
                         nil)
@@ -490,14 +522,15 @@
 " ---------------------------- Monadic Operators ----------------------------- "
 
 (defun fold (fn)
-    "Accepts a function and returns another function that, given a vector, com- putes the
-     application of the function to sucessive elements of the vector."
+    "Accepts a function and returns another function that, given a vector, computes the application
+     of the function to sucessive elements of the vector."
     (lambda (tensor)
         (make-instance 'tensor :initial-content (tensor-content (reduce fn (mapcar #'s (tensor-content tensor)))))))
 
 (defun scan (fn)
-    "Similar to fold but using increasingly large subsets of the elements of the vector,
-    starting from a subset containing just the first element up to a subset containing all elements."
+    "Similar to the fold function but using increasingly larger subsets of the elements of the
+     vector, starting from a subset containing just the first element up to a subset containing all
+     elements."
     (lambda (tensor)
       (make-instance 'tensor :initial-content (reduce-subsets fn (mapcar #'s (tensor-content tensor)) 0 1))))
 
@@ -510,8 +543,8 @@
 
 (defun outer-product (fn)
     "Accepts a function and returns another functions that, given two tensors, returns a
-    new tensor with the result of applying the function to every combination of values from the
-    first and second tensors."
+     new tensor with the result of applying the function to every combination of values from the
+     first and second tensors."
     (lambda (tensor1 tensor2)
       (let ((row-dim (tensor-content (shape tensor1)))
             (col-dim (tensor-content (shape tensor2))))
@@ -524,8 +557,8 @@
 
 (defun inner-product (fn1 fn2)
     "Accepts two functions and returns a function that, given two tensors, returns a new tensor
-    computed according to the rules of the algebraic inner product but replacing the algebraic
-    sum and product with the first and second functions."
+     computed according to the rules of the algebraic inner product but replacing the algebraic
+     sum and product with the first and second functions."
     (labels ((number-columns (tensor)
                 (car (last (tensor-content (shape tensor)))))
              (number-lines (tensor)
@@ -581,6 +614,7 @@
     (funcall (fold #'.*) (shape tensor)))
 
 (defmethod rank ((scalar scalar))
+    "Returns a scalar with the number of dimensions of the tensor, which is 0 in the case of a scalar."
     (s 0))
 
 (defmethod rank ((tensor tensor))
@@ -588,9 +622,8 @@
     (funcall (fold #'.+) (.< (s 0) (shape tensor))))
 
 (defun within (numbers inf sup)
-    "Given a vector of numbers *numbers* and two numbers inf and sup, returns
-     a vector containing only the elements of *numbers* that are in the range
-     between inf and sup."
+    "Given a vector of numbers *numbers* and two numbers inf and sup, returns a vector containing
+     only the elements of *numbers* that are in the range between inf and sup."
     (select (.and (.>= numbers inf) (.<= numbers sup)) numbers))
 
 (defun ravel (tensor)
@@ -598,6 +631,7 @@
     (reshape (tally tensor) tensor))
 
 (defun primes (index)
-    "Returns a vector with all prime numbers from 2 up to the scalar, inclusive."
+    "Returns a vector with all prime numbers from 2 up to the scalar, including the scalar."
     (let ((numbers (drop (s 1) (interval (car (tensor-content index))))))
-      (select (.not (member? numbers (funcall (outer-product #'.*) numbers numbers))) numbers)))
+        (select (.not (member? numbers (funcall (outer-product #'.*) numbers numbers)))
+                numbers)))
