@@ -1,13 +1,14 @@
 " ------------------------------- Classes ----------------------------------- "
+
+"Defines the class that represents a tensor. A tensor is a object that
+ contains a list that stores the elements of the tensor."
 (defclass tensor ()
-  "Defines the class that represents a tensor. A tensor is a object that
-   contains a list that stores the elements of the tensor."
     ((data :type list
            :reader tensor-content
            :initarg :initial-content)))
 
+"Defines the class tha represents a scalar. A scalar is a tensor."
 (defclass scalar (tensor)
-  "Defines the class tha represents a scalar. A scalar is a tensor."
   ())
 
 " ------------------------------- Utility Functions ------------------------- "
