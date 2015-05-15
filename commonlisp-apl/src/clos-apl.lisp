@@ -124,6 +124,17 @@
           ((< index 0)
             (remove-element (+ (- (length list) (- index)) 1) list))))
 
+(defun remove-elements (number list)
+    (cond ((zerop number)
+            list)
+          ((> number 0)
+            (remove-elements (- number 1)
+                             (remove-element 1 list)))
+          ((< number 0)
+            (remove-elements (+ number 1)
+                             (remove-element -1 list)))))
+
+
 (defun scalar-to-real (scalar)
     "Receives a scalar and returns the value of the scalar."
     (car (tensor-content scalar)))
@@ -437,8 +448,8 @@
     are removed."
    (labels ((rec (remove-list lst)
                 (if (eql (length remove-list) 1)
-                    (remove-element (car remove-list) lst)
-                    (let ((mod-lst (car remove-list) lst))
+                    (remove-elements (car remove-list) lst)
+                    (let ((mod-lst (remove-elements (car remove-list) lst)))
                         (mapcar (curry #'rec (cdr remove-list)) mod-lst)))))
         (make-instance 'tensor :initial-content (rec (tensor-content t1) (tensor-content t2)))))
 
@@ -623,7 +634,7 @@
 
 (defmethod rank ((tensor tensor))
     "Returns a scalar with the number of dimensions of the tensor."
-    (funcall (fold #'.+) (.< (s 0) (shape tensor))))
+    (funcall (fold #'.+) (.<= (s 0) (shape tensor))))
 
 (defun within (numbers inf sup)
     "Given a vector of numbers *numbers* and two numbers inf and sup, returns a vector containing
