@@ -73,7 +73,7 @@
 
 (defun list-dimensions (lst)
     "Returns the dimensions of a list. If the list does not contain nested lists, it returns a list
-     that contains the length of the argument list,oOtherwise returns a list that contains the
+     that contains the length of the argument list, otherwise returns a list that contains the
      dimensions of the sublists of the argument list."
     (when (listp lst)
           (cons (length lst) (list-dimensions (car lst)))))
@@ -544,15 +544,18 @@
 (defun fold (fn)
     "Accepts a function and returns another function that, given a vector, computes the application
      of the function to sucessive elements of the vector."
-    (lambda (tensor)
-        (reduce fn (mapcar #'s (tensor-content tensor)))))
+    (lambda (vector)
+        (reduce fn (mapcar #'s (tensor-content vector)))))
 
 (defun scan (fn)
     "Similar to the fold function but using increasingly larger subsets of the elements of the
      vector, starting from a subset containing just the first element up to a subset containing all
      elements."
-    (lambda (tensor)
-      (make-instance 'tensor :initial-content (reduce-subsets fn (mapcar #'s (tensor-content tensor)) 0 1))))
+    (lambda (vector)
+      (make-instance 'tensor :initial-content (reduce-subsets fn
+                                                              (mapcar #'s (tensor-content vector))
+                                                              0
+                                                              1))))
 
 (defun outer-product-aux (fn lst1 lst2)
     (let ((result-lst '()))
