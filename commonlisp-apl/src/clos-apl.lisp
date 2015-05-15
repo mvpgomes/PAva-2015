@@ -180,23 +180,23 @@
 (defun inverse (tensor)
     (map-tensor #'/ tensor))
 
-(defmethod .! ((tensor tensor))
+(defun .! (tensor)
     "Receives a tensor and returns a new tensor where the function factorial is applied
      element-wise."
     (map-tensor #'! tensor))
 
-(defmethod .sin ((tensor tensor))
+(defun .sin (tensor)
     "Receives a tensor and returns a new tensor where the function sin is applied element-wise."
     (map-tensor #'sin tensor))
 
-(defmethod .cos ((tensor tensor))
+(defun .cos (tensor)
     "Creates a new tensor whose elements are the result of applying the cos function to the
      corresponding elements of the argument tensor."
     (map-tensor #'cos tensor))
 
-(defmethod .not ((tensor tensor))
+(defun .not (tensor)
     "Receives a tensor and returns a new tensor where the function not is applied element-wise."
-    (map-tensor #'(lambda (x) (if (> x 0) 0 1))
+    (map-tensor #'(lambda (x) (if (zerop x) 1 0))
                 tensor))
 
 (defmethod shape ((scalar scalar))
