@@ -536,7 +536,8 @@
                             (cons (car elements) (rec (cdr filter) (cdr elements)))))
                       (t
                         (cons (rec filter (car elements)) (rec filter (cdr elements)))))))
-        (make-instance 'tensor :initial-content (rec (tensor-content filter-tensor) (tensor-content elements-tensor)))))
+        (make-instance 'tensor :initial-content (rec (flatten (tensor-content filter-tensor))
+                                                     (tensor-content elements-tensor)))))
 
 " ---------------------------- Monadic Operators ----------------------------- "
 
