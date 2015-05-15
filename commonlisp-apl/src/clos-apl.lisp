@@ -132,7 +132,9 @@
     "Receives a scalar and a tensor and returns a new tensor with the dimension
      of the argument tensor. The new tensor is populated with the value of the
      argument scalar."
-    (reshape (shape tensor) scalar))
+    (if (null (tensor-content (shape tensor)))
+        scalar
+        (reshape (shape tensor) scalar)))
 
 (defun scalar? (tensor)
     "Receives a tensor and returns true if the tensor is a scalar, otherwise returns false."
@@ -525,7 +527,7 @@
     "Accepts a function and returns another function that, given a vector, computes the application
      of the function to sucessive elements of the vector."
     (lambda (tensor)
-        (make-instance 'tensor :initial-content (tensor-content (reduce fn (mapcar #'s (tensor-content tensor)))))))
+        (reduce fn (mapcar #'s (tensor-content tensor)))))
 
 (defun scan (fn)
     "Similar to the fold function but using increasingly larger subsets of the elements of the
@@ -605,7 +607,9 @@
                                        (mod-t2 (cond ((scalar? t2) (scalar->matrix t2 (number-columns t1)))
                                                      ((vector? t2) (vec2->matrix t2))
                                                      (t t2))))
-                                    (compute-matrix mod-t1 mod-t2))))))
+                                    (compute-matrix
+                                        (map-tensor #'s mod-t1)
+                                        (map-tensor #'s mod-t2)))))))
 
 " ---------------------------- Exercises -------------------------------------- "
 
