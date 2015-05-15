@@ -469,7 +469,7 @@
                                 (dotimes (i (car dimensions))
                                     (setf result (cons (rec (cdr dimensions) content) result)))
                                 (reverse result))))))
-            (make-instance 'tensor :initial-content (rec (tensor-content tensor-dimensions)
+            (make-instance 'tensor :initial-content (rec (flatten (tensor-content tensor-dimensions))
                                                          (flatten (tensor-content tensor-content)))))))
 
 (defmethod catenate ((s1 scalar) (s2 scalar))
@@ -478,10 +478,16 @@
                    :initial-content (list (first (tensor-content s1)) (first (tensor-content s2)))))
 
 (defmethod catenate ((scalar scalar) (tensor tensor))
-    (catenate (scalar-to-tensor scalar tensor) tensor))
+    (let ((correct-dim (remove-element -1 (tensor-content (shape tensor)))))
+        (catenate (reshape (apply #'v (append correct-dim (list 1)))
+                           scalar)
+                  tensor)))
 
 (defmethod catenate ((tensor tensor) (scalar scalar))
-    (catenate tensor (scalar-to-tensor scalar tensor)))
+    (let ((correct-dim (remove-element -1 (tensor-content (shape tensor)))))
+        (catenate tensor
+                  (reshape (apply #'v (append correct-dim (list 1)))
+                           scalar))))
 
 (defmethod catenate ((t1 tensor) (t2 tensor))
     "Returns a tensor that joins the arguments along their last dimension."
@@ -502,9 +508,9 @@
                            :initial-content (cond ((eql r1 r2)
                                                     (append-elements-last-dim (tensor-content t1) (tensor-content t2)))
                                                   ((< r1 r2)
-                                                    (append-elements-last-dim (add-dim-1 t1) (tensor-content t2)))
+                                                    (append-elements-last-dim (tensor-content (add-dim-1 t1)) (tensor-content t2)))
                                                   (t
-                                                    (append-elements-last-dim (tensor-content t1) (add-dim-1 t2))))))))
+                                                    (append-elements-last-dim (tensor-content t1) (tensor-content (add-dim-1 t2)))))))))
 
 (defun member? (tensor elements)
     "Returns a tensor of booleans with the same shape and dimension of the first argument,
