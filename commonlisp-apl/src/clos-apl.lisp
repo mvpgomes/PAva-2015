@@ -454,8 +454,6 @@
         (make-instance 'tensor :initial-content (rec (tensor-content t1) (tensor-content t2)))))
 
 (defun reshape (tensor-dimensions tensor-content)
-    "Returns a tensor with the dimensions provided in the first argument and elements taken from the
-     second argument, repeating them as necessary to fill the resulting tensor."
     (let ((counter 0))
         (labels ((rec (dimensions content)
                     (cond ((null (cdr dimensions))
@@ -563,6 +561,7 @@
         do (loop for j in lst2
           do (setf result-lst (append result-lst (list (funcall fn i j))))))
     (map 'list #'scalar-to-real result-lst)))
+
 
 (defun outer-product (fn)
     "Accepts a function and returns another functions that, given two tensors, returns a
