@@ -11,7 +11,7 @@
 (defclass scalar (tensor)
   ())
 
-(defmethod print-object ((tensor tensor) (stream stream))
+(defmethod print-object ((tensor tensor) stream)
   "Implementation of the generic method print-object for the tensor data structure.
    If the tensor is a vector, prints its elements separated by a whitespace.
    If the tensor is not one of the previous cases, then for each sub-tensor of the
@@ -194,7 +194,7 @@
 (defun .! (tensor)
     "Receives a tensor and returns a new tensor where the function factorial is applied
      element-wise."
-    (map-tensor #'! tensor))
+    (map-tensor #'(lambda (n) (fold-tensor #'* (interval n) 1)) tensor))
 
 (defun .sin (tensor)
     "Receives a tensor and returns a new tensor where the function sin is applied element-wise."
@@ -528,7 +528,7 @@
     "From a tensor of booleans and another tensor, returns a tensor containing only the elements of
      the last dimension of the second argument whose corresponding element in the first tensor is 1."
     (labels ((rec (filter elements)
-                (cond ((null elements)
+                (cond ((or (null elements) (null filter))
                         nil)
                       ((atom (car elements))
                         (if (zerop (car filter))
